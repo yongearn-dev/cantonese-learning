@@ -205,6 +205,50 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
 .retry-btn{background:linear-gradient(135deg,var(--accent),var(--purple));color:#fff;border:none;border-radius:10px;padding:10px 28px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px;margin-top:6px}
 /* history */
 .hist-item{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:13px;box-shadow:var(--shadow)}
+
+/* ── LESSONS ── */
+.lesson-filter-bar{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:14px;padding-bottom:2px}
+.lesson-filter-bar::-webkit-scrollbar{display:none}
+.lesson-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:0;margin-bottom:12px;box-shadow:var(--shadow);overflow:hidden;transition:border-color .15s}
+.lesson-card:hover{border-color:var(--accent)}
+.lc-header{display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer}
+.lc-badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+.lc-badge.Chapter{background:#dbeafe;color:#1d4ed8}
+.lc-badge.Grammar{background:#fef3c7;color:#92400e}
+.lc-badge.Extra{background:#d1fae5;color:#065f46}
+.lc-ch{font-size:11px;font-family:'Space Mono';color:var(--text-muted);flex-shrink:0}
+.lc-title{font-size:14px;font-weight:600;flex:1;min-width:0}
+.lc-chevron{color:var(--text-muted);font-size:14px;transition:transform .2s;flex-shrink:0}
+.lc-chevron.open{transform:rotate(90deg)}
+.lc-body{display:none;border-top:1.5px solid var(--border);padding:14px}
+.lc-body.open{display:block}
+.lc-section{margin-bottom:12px}
+.lc-section:last-child{margin-bottom:0}
+.lc-label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px}
+.media-btn{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:9px 12px;text-decoration:none;color:var(--text);font-size:13px;font-weight:500;transition:all .15s;margin-bottom:6px}
+.media-btn:hover{border-color:var(--accent);background:var(--accent-bg);color:var(--accent)}
+.media-btn .icon{font-size:18px;flex-shrink:0}
+.media-btn .lbl{flex:1}
+.media-btn .ext{font-size:10px;color:var(--text-muted)}
+.media-btn.soundcloud{border-color:#ff7700;background:#fff8f3}
+.media-btn.soundcloud:hover{background:#fff0e6}
+.media-btn.soundcloud .icon-wrap{color:#ff7700}
+.media-btn.youtube{border-color:#ff0000;background:#fff5f5}
+.media-btn.youtube:hover{background:#ffe8e8}
+.lc-vocab-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.lc-vocab-item{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.lc-vocab-jyut{font-family:'Space Mono';color:var(--accent);font-size:10px;margin-bottom:2px}
+.lc-vocab-char{font-size:16px;font-weight:700}
+.lc-vocab-thai{font-family:'Noto Sans Thai';font-size:11px;color:var(--text-sub)}
+.locked-overlay{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1.5px dashed var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:12px;color:var(--text-muted);font-size:13px}
+.unlock-form{display:flex;gap:8px;margin-top:8px}
+.unlock-input{flex:1;border:1.5px solid var(--border);border-radius:8px;padding:7px 11px;font-size:13px;font-family:inherit;background:var(--surface);color:var(--text);outline:none}
+.unlock-input:focus{border-color:var(--accent)}
+.unlock-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-weight:700;cursor:pointer;font-family:inherit;font-size:13px;white-space:nowrap}
+.unlock-err{font-size:11px;color:var(--red);margin-top:4px}
+.lesson-progress{font-size:12px;color:var(--text-sub);margin-bottom:14px}
+.progress-bar-wrap{background:var(--surface2);border-radius:20px;height:6px;margin-top:4px;overflow:hidden}
+.progress-bar-fill{background:linear-gradient(90deg,var(--accent),#6d28d9);height:6px;border-radius:20px;transition:width .4s}
 </style>
 </head>
 <body>
@@ -225,6 +269,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
     <button class="tab-btn" data-tab="sentence">📐 句式</button>
     <button class="tab-btn" data-tab="classifier">🀄 量詞</button>
     <button class="tab-btn" data-tab="dialogue">💬 對話</button>
+    <button class="tab-btn" data-tab="lessons">📖 課堂</button>
     <button class="tab-btn" data-tab="game">🎮 遊戲</button>
   </div>
 </div>
@@ -312,6 +357,16 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
     <div class="no-speech-note" id="noSpeechNote" style="display:none">⚠️ 你嘅瀏覽器唔支援語音。iPhone Safari 效果最好。</div>
   </div>
 
+
+  <!-- LESSONS -->
+  <div class="page" id="page-lessons">
+    <div class="sec">📖 課堂材料</div>
+    <p style="font-size:12px;color:var(--text-sub);margin-bottom:10px;font-family:'Noto Sans Thai'">เลือกบทเรียนที่ต้องการเรียน</p>
+    <div id="lessonProgress"></div>
+    <div class="lesson-filter-bar" id="lessonFilterBar"></div>
+    <div id="lessonList"></div>
+  </div>
+
   <!-- GAME -->
   <div class="page" id="page-game">
     <div class="g-tab-bar">
@@ -334,6 +389,7 @@ const URLS = {
   dialogue: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRNbMKKRPjdRLCIJlgK9SZvNu2pbqUzaMCR2RuxDHQ1LWKXw6jjeBYjH6_wPKI7S2TtiEg00cqcSM7d/pub?gid=950167970&single=true&output=csv',
   classifier:'https://docs.google.com/spreadsheets/d/e/2PACX-1vRNbMKKRPjdRLCIJlgK9SZvNu2pbqUzaMCR2RuxDHQ1LWKXw6jjeBYjH6_wPKI7S2TtiEg00cqcSM7d/pub?gid=232509116&single=true&output=csv',
   sentence:  'https://docs.google.com/spreadsheets/d/e/2PACX-1vRNbMKKRPjdRLCIJlgK9SZvNu2pbqUzaMCR2RuxDHQ1LWKXw6jjeBYjH6_wPKI7S2TtiEg00cqcSM7d/pub?gid=1005757231&single=true&output=csv',
+  lessons:   'https://docs.google.com/spreadsheets/d/e/2PACX-1vRNbMKKRPjdRLCIJlgK9SZvNu2pbqUzaMCR2RuxDHQ1LWKXw6jjeBYjH6_wPKI7S2TtiEg00cqcSM7d/pub?gid=1206393447&single=true&output=csv',
 };
 
 // ── CSV PARSER ────────────────────────────────────────────────
@@ -359,7 +415,7 @@ function parseCSV(text) {
 // ── STATE ─────────────────────────────────────────────────────
 const S = {
   tab: 'home',
-  data: { vocab:[], dialogue:[], classifier:[], sentence:[] },
+  data: { vocab:[], dialogue:[], classifier:[], sentence:[], lessons:[] },
   vocabCat: 'all', vocabIdx: 0,
   ssPatternId: null,
   dlCat: 'all', dlId: null,
@@ -487,16 +543,18 @@ function h(tag, cls, inner='', attrs={}) {
 // ── FETCH ALL DATA ────────────────────────────────────────────
 async function loadData() {
   try {
-    const [v,d,c,s] = await Promise.all([
+    const [v,d,c,s,l] = await Promise.all([
       fetch(URLS.vocab).then(r=>r.text()),
       fetch(URLS.dialogue).then(r=>r.text()),
       fetch(URLS.classifier).then(r=>r.text()),
       fetch(URLS.sentence).then(r=>r.text()),
+      fetch(URLS.lessons).then(r=>r.text()),
     ]);
     S.data.vocab      = parseCSV(v);
     S.data.dialogue   = parseCSV(d);
     S.data.classifier = parseCSV(c);
     S.data.sentence   = parseCSV(s);
+    S.data.lessons    = parseCSV(l);
     // fix tone col that google sheets interpreted as date
     S.data.vocab.forEach(w=>{ if(w.tone && w.tone.includes('/')) w.tone = w.tone.split('/').pop().trim(); });
     $('loadingScreen').style.display='none';
@@ -514,6 +572,7 @@ function initAll() {
   buildClassifier();
   buildDialogue();
   buildGame();
+  buildLessons();
   setupTabs();
   showPage('home');
   Speech.init();
@@ -965,6 +1024,177 @@ function renderResult(){
     <button class="retry-btn" onclick="initGame('${GS.tab}')">再玩一次</button>
   </div>`;
 }
+
+// ── LESSONS ───────────────────────────────────────────────────
+
+// Password unlock system - keys stored in localStorage
+// Format: localStorage key = 'unlocked_' + lesson_id
+// Teacher sets password per lesson in Sheet5 col J (password)
+// Default unlocked lessons: unlocked_by_default === 'TRUE'
+
+function getLessonUnlocked(lessonId, row) {
+  if (row.unlocked_by_default === 'TRUE') return true;
+  return localStorage.getItem('unlocked_' + lessonId) === '1';
+}
+
+function buildLessons() {
+  const lessons = S.data.lessons;
+  if (!lessons.length) return;
+
+  // Filter bar: All + unique types
+  const types = ['all', ...new Set(lessons.map(l => l.type))];
+  const typeLabel = { all:'全部', Chapter:'Chapter', Grammar:'Grammar', Extra:'Extra' };
+  const bar = $('lessonFilterBar');
+  let currentFilter = 'all';
+
+  types.forEach(t => {
+    const btn = h('button', 'f-btn' + (t==='all'?' act':''), typeLabel[t]||t);
+    btn.addEventListener('click', () => {
+      currentFilter = t;
+      bar.querySelectorAll('.f-btn').forEach(b => b.classList.remove('act'));
+      btn.classList.add('act');
+      renderLessons(currentFilter);
+    });
+    bar.appendChild(btn);
+  });
+
+  renderLessons('all');
+}
+
+function renderLessons(filter) {
+  const lessons = S.data.lessons;
+  const filtered = filter === 'all' ? lessons : lessons.filter(l => l.type === filter);
+  const sorted = [...filtered].sort((a,b) => (+a.order||0)-(+b.order||0) || (+a.chapter||0)-(+b.chapter||0));
+
+  // Progress bar
+  const total = lessons.length;
+  const unlocked = lessons.filter(l => getLessonUnlocked(l.lesson_id, l)).length;
+  $('lessonProgress').innerHTML = `
+    <div class="lesson-progress">
+      已解鎖 ${unlocked} / ${total} 個課堂
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${Math.round(unlocked/total*100)}%"></div></div>
+    </div>`;
+
+  $('lessonList').innerHTML = sorted.map(l => {
+    const unlocked = getLessonUnlocked(l.lesson_id, l);
+    const chLabel = l.chapter !== undefined && l.chapter !== '' ? `Ch${String(l.chapter).padStart(2,'0')}` : '';
+    return `
+    <div class="lesson-card" id="lcard-${l.lesson_id}-${l.order}">
+      <div class="lc-header" onclick="toggleLesson('${l.lesson_id}','${l.order}')">
+        <span class="lc-badge ${l.type}">${l.type}</span>
+        ${chLabel ? `<span class="lc-ch">${chLabel}</span>` : ''}
+        <span class="lc-title">${l.title}</span>
+        ${unlocked ? `<span class="lc-chevron" id="chev-${l.lesson_id}-${l.order}">›</span>` : '<span style="font-size:14px">🔒</span>'}
+      </div>
+      <div class="lc-body" id="lbody-${l.lesson_id}-${l.order}">
+        ${unlocked ? renderLessonBody(l) : renderUnlockForm(l)}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderLessonBody(l) {
+  let html = '';
+
+  // SoundCloud first (備課)
+  if (l.soundcloud_url && l.soundcloud_url.trim()) {
+    html += `
+    <div class="lc-section">
+      <div class="lc-label">🎵 備課收聽（先聽再睇片）</div>
+      <a class="media-btn soundcloud" href="${l.soundcloud_url.trim()}" target="_blank" rel="noopener">
+        <span class="icon">☁️</span>
+        <span class="lbl">SoundCloud — ${l.title}</span>
+        <span class="ext">↗</span>
+      </a>
+    </div>`;
+  }
+
+  // YouTube
+  if (l.youtube_url && l.youtube_url.trim()) {
+    // Handle multiple YouTube links (newline or space separated)
+    const ytLinks = l.youtube_url.trim().split(/[
+\s]+/).filter(u => u.startsWith('http'));
+    html += `
+    <div class="lc-section">
+      <div class="lc-label">▶️ 教學影片</div>
+      ${ytLinks.map((url,i) => `
+      <a class="media-btn youtube" href="${url}" target="_blank" rel="noopener">
+        <span class="icon">▶</span>
+        <span class="lbl">YouTube${ytLinks.length>1?' ('+(i+1)+')':''} — ${l.title}</span>
+        <span class="ext">↗</span>
+      </a>`).join('')}
+    </div>`;
+  }
+
+  // Vocab (from Sheet1, matched by lesson_id or chapter)
+  const chNum = l.chapter !== undefined ? String(l.chapter) : '';
+  const vocabForLesson = S.data.vocab.filter(v => {
+    // Match by explicit vocab_ids if set
+    if (l.vocab_ids && l.vocab_ids.trim()) {
+      return l.vocab_ids.split(',').map(s=>s.trim()).includes(v.id);
+    }
+    return false;
+  });
+
+  if (vocabForLesson.length) {
+    html += `
+    <div class="lc-section">
+      <div class="lc-label">📚 本課詞彙</div>
+      <div class="lc-vocab-grid">
+        ${vocabForLesson.map(v => `
+        <div class="lc-vocab-item">
+          <div class="lc-vocab-jyut">${v.jyutping}</div>
+          <div class="lc-vocab-char">${v.char}</div>
+          <div class="lc-vocab-thai">${v.thai}</div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  return html || '<div style="font-size:13px;color:var(--text-muted)">暫冇額外材料</div>';
+}
+
+function renderUnlockForm(l) {
+  return `
+    <div class="locked-overlay">🔒 呢個課堂需要解鎖密碼</div>
+    <div class="unlock-form">
+      <input class="unlock-input" type="password" placeholder="輸入老師俾嘅密碼..." id="pw-${l.lesson_id}-${l.order}">
+      <button class="unlock-btn" onclick="tryUnlock('${l.lesson_id}','${l.order}','${l.password||''}')">解鎖</button>
+    </div>
+    <div class="unlock-err" id="pwerr-${l.lesson_id}-${l.order}"></div>`;
+}
+
+window.toggleLesson = (id, order) => {
+  const body = $(`lbody-${id}-${order}`);
+  const chev = $(`chev-${id}-${order}`);
+  if (!body) return;
+  const isOpen = body.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.lc-body').forEach(b => b.classList.remove('open'));
+  document.querySelectorAll('.lc-chevron').forEach(c => c.classList.remove('open'));
+  // Toggle this one
+  if (!isOpen) {
+    body.classList.add('open');
+    if (chev) chev.classList.add('open');
+  }
+};
+
+window.tryUnlock = (id, order, correctPw) => {
+  const input = $(`pw-${id}-${order}`);
+  const errEl = $(`pwerr-${id}-${order}`);
+  if (!input) return;
+  const entered = input.value.trim();
+  // If no password set in sheet, any non-empty input unlocks (teacher mode)
+  const match = correctPw ? entered === correctPw : entered.length > 0;
+  if (match) {
+    localStorage.setItem('unlocked_' + id, '1');
+    renderLessons(document.querySelector('#lessonFilterBar .f-btn.act')?.textContent === '全部' ? 'all' :
+      document.querySelector('#lessonFilterBar .f-btn.act')?.textContent || 'all');
+  } else {
+    if (errEl) { errEl.textContent = '密碼錯誤，請再試。'; setTimeout(()=>{errEl.textContent='';},2000); }
+  }
+};
+
 
 // ── START ─────────────────────────────────────────────────────
 loadData();
