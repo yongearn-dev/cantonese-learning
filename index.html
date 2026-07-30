@@ -541,42 +541,106 @@ function h(tag, cls, inner='', attrs={}) {
 }
 
 // ── FETCH ALL DATA ────────────────────────────────────────────
-async function loadData() {
+// Fetch one sheet safely – returns [] on failure, logs which sheet failed
+async function fetchSheet(name, url) {
   try {
-    const [v,d,c,s,l] = await Promise.all([
-      fetch(URLS.vocab).then(r=>r.text()),
-      fetch(URLS.dialogue).then(r=>r.text()),
-      fetch(URLS.classifier).then(r=>r.text()),
-      fetch(URLS.sentence).then(r=>r.text()),
-      fetch(URLS.lessons).then(r=>r.text()),
-    ]);
-    S.data.vocab      = parseCSV(v);
-    S.data.dialogue   = parseCSV(d);
-    S.data.classifier = parseCSV(c);
-    S.data.sentence   = parseCSV(s);
-    S.data.lessons    = parseCSV(l);
-    // fix tone col that google sheets interpreted as date
-    S.data.vocab.forEach(w=>{ if(w.tone && w.tone.includes('/')) w.tone = w.tone.split('/').pop().trim(); });
-    $('loadingScreen').style.display='none';
-    initAll();
+    // Add cache-busting to avoid stale cached errors
+    const bustUrl = url + '&_t=' + Date.now();
+    const r = await fetch(bustUrl, { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const text = await r.text();
+    // Detect HTML error page instead of CSV
+    if (text.trim().startsWith('<')) throw new Error('Sheet not published as CSV. Go to File → Share → Publish to web → choose the sheet → CSV format.');
+    if (text.trim().length < 10) throw new Error('Empty response');
+    const rows = parseCSV(text);
+    console.log('Sheet [' + name + '] OK:', rows.length, 'rows');
+    return rows;
   } catch(e) {
-    $('loadingScreen').innerHTML = `<div class="error-box">⚠️ 載入失敗，請確認網絡連線後重新整理。<br><small>${e.message}</small></div>`;
+    console.warn('Sheet [' + name + '] FAILED:', e.message);
+    return null;
   }
+}
+
+async function loadData() {
+  // Show loading
+  $('loadingScreen').style.display = 'flex';
+
+  const results = await Promise.all([
+    fetchSheet('vocab',      URLS.vocab),
+    fetchSheet('dialogue',   URLS.dialogue),
+    fetchSheet('classifier', URLS.classifier),
+    fetchSheet('sentence',   URLS.sentence),
+    fetchSheet('lessons',    URLS.lessons),
+  ]);
+
+  const [v, d, c, s, l] = results;
+
+  // Core sheets (vocab, dialogue, classifier, sentence) must succeed
+  const coreFailed = [
+    v === null && 'vocab (詞彙)',
+    d === null && 'dialogue (對話)',
+    c === null && 'classifier (量詞)',
+    s === null && 'sentence (句式)',
+  ].filter(Boolean);
+
+  if (coreFailed.length) {
+    $('loadingScreen').innerHTML = `
+      <div class="error-box" style="max-width:340px;margin:16px auto">
+        <div style="font-size:16px;margin-bottom:8px">⚠️ 載入失敗</div>
+        <div style="margin-bottom:8px">以下 Sheet 未能讀取：</div>
+        <strong>${coreFailed.join('<br>')}</strong>
+        <div style="margin-top:10px;font-size:12px;color:#7f1d1d">
+          修復步驟：<br>
+          1. 開 Google Sheets<br>
+          2. 檔案 → 共用 → 發佈到網路<br>
+          3. 選對應分頁 → 格式選 CSV → 發佈<br>
+          4. 然後按下面重新載入
+        </div>
+        <button onclick="location.reload()" style="margin-top:12px;padding:8px 20px;background:#1a56db;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:700;width:100%">🔄 重新載入</button>
+      </div>`;
+    return;
+  }
+
+  S.data.vocab      = v;
+  S.data.dialogue   = d;
+  S.data.classifier = c;
+  S.data.sentence   = s;
+  S.data.lessons    = l || []; // lessons optional – graceful if Sheet5 not yet published
+
+  // Fix tone column (Google Sheets sometimes formats as date)
+  S.data.vocab.forEach(w => {
+    if (w.tone && w.tone.includes('/')) w.tone = w.tone.split('/').pop().trim();
+    if (w.tone && w.tone.match(/^\d{4}/)) w.tone = ''; // date artifact
+  });
+
+  $('loadingScreen').style.display = 'none';
+
+  if (S.data.lessons.length === 0) {
+    console.warn('Sheet5 (lessons) not loaded – 課堂 tab will be empty. Publish Sheet5 as CSV to enable.');
+  }
+
+  initAll();
 }
 
 // ── INIT ALL ──────────────────────────────────────────────────
 function initAll() {
-  buildHome();
-  buildVocab();
-  buildSentence();
-  buildClassifier();
-  buildDialogue();
-  buildGame();
-  buildLessons();
-  setupTabs();
-  showPage('home');
-  Speech.init();
-  if (!Speech.supported) $('noSpeechNote').style.display='block';
+  try {
+    buildHome();
+    buildVocab();
+    buildSentence();
+    buildClassifier();
+    buildDialogue();
+    buildGame();
+    buildLessons();
+    setupTabs();
+    showPage('home');
+    Speech.init();
+    if (!Speech.supported) $('noSpeechNote').style.display='block';
+  } catch(e) {
+    console.error('initAll error:', e);
+    $('loadingScreen').style.display = 'flex';
+    $('loadingScreen').innerHTML = `<div class="error-box">⚠️ 初始化出錯：${e.message}<br><button onclick="location.reload()" style="margin-top:8px;padding:7px 16px;background:#1a56db;color:#fff;border:none;border-radius:8px;cursor:pointer">重新載入</button></div>`;
+  }
 }
 
 // ── TABS ──────────────────────────────────────────────────────
