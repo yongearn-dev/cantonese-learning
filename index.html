@@ -316,7 +316,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
         </div>
         <div class="fc-face fc-back" id="fcBack">
           <div class="fc-thai" id="fcThai"></div>
-          <div class="fc-en" id="fcEn"></div>
+          <div class="fc-en" id="fcEn" style="display:none"></div>
           <div class="fc-char-sm" id="fcCharSm"></div>
           <div class="fc-tone" id="fcTone"></div>
         </div>
@@ -383,16 +383,199 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
 </div><!-- /app -->
 
 <script>
-// ── CSV URLS ──────────────────────────────────────────────────
-const URLS = {
-  vocab:    'https://docs.google.com/spreadsheets/d/e/2PACX-1vRNbMKKRPjdRLCIJlgK9SZvNu2pbqUzaMCR2RuxDHQ1LWKXw6jjeBYjH6_wPKI7S2TtiEg00cqcSM7d/pub?gid=0&single=true&output=csv',
-  dialogue: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRNbMKKRPjdRLCIJlgK9SZvNu2pbqUzaMCR2RuxDHQ1LWKXw6jjeBYjH6_wPKI7S2TtiEg00cqcSM7d/pub?gid=950167970&single=true&output=csv',
-  classifier:'https://docs.google.com/spreadsheets/d/e/2PACX-1vRNbMKKRPjdRLCIJlgK9SZvNu2pbqUzaMCR2RuxDHQ1LWKXw6jjeBYjH6_wPKI7S2TtiEg00cqcSM7d/pub?gid=232509116&single=true&output=csv',
-  sentence:  'https://docs.google.com/spreadsheets/d/e/2PACX-1vRNbMKKRPjdRLCIJlgK9SZvNu2pbqUzaMCR2RuxDHQ1LWKXw6jjeBYjH6_wPKI7S2TtiEg00cqcSM7d/pub?gid=1005757231&single=true&output=csv',
-  lessons:   'https://docs.google.com/spreadsheets/d/e/2PACX-1vRNbMKKRPjdRLCIJlgK9SZvNu2pbqUzaMCR2RuxDHQ1LWKXw6jjeBYjH6_wPKI7S2TtiEg00cqcSM7d/pub?gid=1206393447&single=true&output=csv',
+// ── INLINE DATA (no external fetch needed) ───────────────────
+// Data is embedded directly - update here when Google Sheet changes
+
+const INLINE = {
+  vocab: `id,jyutping,char,thai,english,tone,category
+1,nei5 hou2,你好,สวัสดี,Hello,5-2,greetings
+2,m4 goi1,唔該,ขอบคุณ/ขอโทษ,Thank you / Excuse me,4-1,greetings
+3,do1 ze6,多謝,ขอบคุณมาก,Thank you (gift),1-6,greetings
+4,baai3 baai3,拜拜,ลาก่อน,Goodbye,3-3,greetings
+5,hai6,係,ใช่,Yes / Is,6,basics
+6,m4 hai6,唔係,ไม่ใช่,No / Is not,4-6,basics
+7,hou2,好,ดี,Good,2,basics
+8,m4 hou2,唔好,ไม่ดี,Not good,4-2,basics
+9,ngo5,我,ฉัน/ผม,I / Me,5,pronouns
+10,nei5,你,คุณ,You,5,pronouns
+11,keoi5,佢,เขา/เธอ,He / She,5,pronouns
+12,sik6 fan6,食飯,กินข้าว,Eat a meal,6-6,food
+13,jam2 seoi2,飲水,ดื่มน้ำ,Drink water,2-2,food
+14,hou2 sik6,好食,อร่อย,Delicious,2-6,food
+15,gei2 do1 cin2,幾多錢,เท่าไหร่,How much?,2-1-2,shopping`,
+
+  dialogue: `dialogue_id,title,titleThai,emoji,category,line_order,speaker,jyutping,cantonese,thai
+1,自我介紹,แนะนำตัว,👋,original,1,A,nei5 hou2! ngo5 giu3 aa3 ming4.,你好！我叫阿明。,สวัสดี! ฉันชื่ออาหมิง
+1,自我介紹,แนะนำตัว,👋,original,2,B,nei5 hou2! nei5 hai6 m4 hai6 hoeng1 gong2 jan4?,你好！你係唔係香港人？,สวัสดี! คุณเป็นคนฮ่องกงไหม?
+1,自我介紹,แนะนำตัว,👋,original,3,A,hai6 ngo5 hai6 hoeng1 gong2 jan4. nei5 ne1?,係，我係香港人。你呢？,ใช่ ฉันเป็นคนฮ่องกง แล้วคุณล่ะ?
+1,自我介紹,แนะนำตัว,👋,original,4,B,ngo5 hai6 taai3 gwok3 jan4.,我係泰國人。,ฉันเป็นคนไทย
+2,買嘢,ช้อปปิ้ง,🛍️,original,1,顧客,ni1 go3 gei2 do1 cin2?,呢個幾多錢？,อันนี้เท่าไหร่?
+2,買嘢,ช้อปปิ้ง,🛍️,original,2,店員,ng5 sap6 man1.,五十蚊。,ห้าสิบดอลลาร์
+2,買嘢,ช้อปปิ้ง,🛍️,original,3,顧客,jau5 mou5 peng4 di1?,有冇平啲？,มีถูกกว่านี้ไหม?
+2,買嘢,ช้อปปิ้ง,🛍️,original,4,店員,sei3 sap6 ng5 man1 zeoi3 peng4 laa3.,四十五蚊，最平喇。,สี่สิบห้า ถูกสุดแล้ว
+3,去飲茶,ไปยำชา,🍵,original,1,侍應,nei5 dei6 jiu3 jam2 me1 caa4?,你哋要飲咩茶？,คุณต้องการดื่มชาอะไร?
+3,去飲茶,ไปยำชา,🍵,original,2,客人,pou2 lei5 caa4 m4 goi1.,普洱茶，唔該。,ชาผู่เอ่อ ขอบคุณ
+3,去飲茶,ไปยำชา,🍵,original,3,侍應,jiu3 m4 jiu3 dim2 sam1?,要唔要點心？,ต้องการติ่มซำไหม?
+3,去飲茶,ไปยำชา,🍵,original,4,客人,jiu3 haa1 gaau2 tung4 siu1 maai2 do1 ze6!,要，蝦餃同燒賣，多謝！,ต้องการ ฮาเกาและซิวไม ขอบคุณ!
+4,早晨問候,ทักทายตอนเช้า,🌅,care,1,姐姐,po4 po2 zou2 san4 aa3 nei5 seng2 zo2 mei6 aa3?,婆婆，早晨呀，你醒咗未呀？,คุณยาย อรุณสวัสดิ์ ตื่นแล้วหรือยัง?
+4,早晨問候,ทักทายตอนเช้า,🌅,care,2,婆婆,seng2 zo2 laa3 bat1 gwo3 zung6 jau5 siu2 siu2 gui6.,醒咗喇，不過仲有少少攰。,ตื่นแล้ว แต่ยังเหนื่อยนิดหน่อย
+4,早晨問候,ทักทายตอนเช้า,🌅,care,3,姐姐,jiu3 m4 jiu3 zoi3 fan3 jat1 zan6?,要唔要再瞓一陣？,จะนอนต่ออีกสักครู่ไหม?
+4,早晨問候,ทักทายตอนเช้า,🌅,care,4,婆婆,m4 fan3 laa3 bong1 ngo5 fu2 hei2 san1.,唔瞓喇，幫我扶起身。,ไม่นอนแล้ว ช่วยพยุงฉันลุกขึ้นด้วย
+4,早晨問候,ทักทายตอนเช้า,🌅,care,5,姐姐,hou2 aa3 nei5 maan6 maan6 ngo5 fu2 zyu6 nei5.,好呀，你慢慢，我扶住你。,ได้เลย ค่อยๆ นะ ฉันพยุงไว้
+4,早晨問候,ทักทายตอนเช้า,🌅,care,6,婆婆,hou2 do1 ze6 nei5 aa3.,好，多謝你呀。,ขอบคุณนะ
+5,食早餐,กินอาหารเช้า,🍳,care,1,姐姐,po4 po2 ngo5 zing2 zo2 zuk1 tung4 gai1 daan2 nei5 soeng2 sik6 bin1 joeng6 sin1?,婆婆，我整咗粥同雞蛋，你想食邊樣先？,คุณยาย ฉันทำโจ๊กกับไข่ไว้แล้ว อยากกินอะไรก่อน?
+5,食早餐,กินอาหารเช้า,🍳,care,2,婆婆,ngo5 sik6 siu2 siu2 zuk1 sin1 laa1.,我食少少粥先啦。,กินโจ๊กนิดหน่อยก่อนแล้วกัน
+5,食早餐,กินอาหารเช้า,🍳,care,3,姐姐,hou2 aa3 siu2 sam1 jit6 ngo5 bong1 nei5 ceoi1 jat1 ceoi1.,好呀，小心熱，我幫你吹一吹。,ได้เลย ระวังร้อนนะ ฉันเป่าให้หน่อย
+5,食早餐,กินอาหารเช้า,🍳,care,4,婆婆,hou2 m4 goi1 nei5.,好，唔該你。,ขอบคุณ
+6,提醒食藥,เตือนกินยา,💊,care,1,姐姐,po4 po2 ji4 gaa1 caa1 m4 do1 si4 gaan3 sik6 joek3 laa3.,婆婆，依家差唔多時間食藥喇。,คุณยาย ใกล้เวลากินยาแล้ว
+6,提醒食藥,เตือนกินยา,💊,care,2,婆婆,gam3 faai3 jau6 jiu3 sik6 laa3?,咁快又要食喇？,เร็วจังต้องกินอีกแล้วหรือ?
+6,提醒食藥,เตือนกินยา,💊,care,3,姐姐,ji1 sang1 waa6 jiu3 zeon2 si4 sik6 deoi3 san1 tai2 hou2 di1.,醫生話要準時食，對身體好啲。,หมอบอกต้องกินตรงเวลา ดีต่อร่างกาย
+6,提醒食藥,เตือนกินยา,💊,care,4,婆婆,hou2 laa1 nei5 bong1 ngo5 ning4 lai4.,好啦，你幫我拎嚟。,ได้ ช่วยเอามาให้ด้วย
+6,提醒食藥,เตือนกินยา,💊,care,5,姐姐,ni1 dou6 jau5 seoi2 nei5 maan6 maan2 tan1.,呢度有水，你慢慢吞。,นี่มีน้ำแล้ว ค่อยๆ กลืนนะ
+6,提醒食藥,เตือนกินยา,💊,care,6,婆婆,hou2 do1 ze6 nei5 tai4 sing3.,好，多謝你提醒。,ขอบคุณที่เตือน
+7,婆婆跌倒,คุณยายล้ม,🚨,emergency,1,婆婆,aai3 jaa3 ngo5 dit3 zo2 aa3!,哎呀，我跌咗呀！,โอ๊ย ฉันล้มแล้ว!
+7,婆婆跌倒,คุณยายล้ม,🚨,emergency,2,姐姐,po4 po2! nei5 jau5 mou5 zing2 can1 bin1 dou6?,婆婆！你有冇整親邊度？,คุณยาย! เจ็บตรงไหนบ้างไหม?
+7,婆婆跌倒,คุณยายล้ม,🚨,emergency,3,婆婆,zek3 goek3 jau5 di1 tung3 hei2 m4 dou2 san1.,隻腳有啲痛，起唔到身。,ขาเจ็บนิดหน่อย ลุกขึ้นไม่ได้
+7,婆婆跌倒,คุณยายล้ม,🚨,emergency,4,姐姐,m4 hou2 juk1 zyu6 ngo5 ji4 gaa1 fu2 nei5 maan6 maan2 hei2 san1.,唔好郁住，我而家扶你慢慢起身。,อย่าขยับก่อน ฉันจะพยุงให้ลุกขึ้นช้าๆ
+7,婆婆跌倒,คุณยายล้ม,🚨,emergency,5,姐姐,jyu4 gwo2 zung6 tung3 ngo5 dei6 jiu3 heoi3 tai2 ji1 sang1.,如果仲痛，我哋要去睇醫生。,ถ้ายังเจ็บอยู่ เราต้องไปหาหมอ
+8,發燒頭暈,เป็นไข้/เวียนหัว,🤒,emergency,1,姐姐,po4 po2 nei5 go3 san1 hou2 ci5 hou2 jit6 wo3.,婆婆，你個身好似好熱喎。,คุณยาย ร่างกายดูร้อนมากเลยนะ
+8,發燒頭暈,เป็นไข้/เวียนหัว,🤒,emergency,2,婆婆,hai6 aa3 ngo5 jau5 di1 wan4 tung4 tau4 tung3.,係呀，我有啲暈同頭痛。,ใช่ ฉันรู้สึกเวียนหัวและปวดหัว
+8,發燒頭暈,เป็นไข้/เวียนหัว,🤒,emergency,3,姐姐,ngo5 bong1 nei5 taam3 haa6 jit6 sin1.,我幫你探下熱先。,ฉันจะวัดไข้ให้ก่อนนะ
+8,發燒頭暈,เป็นไข้/เวียนหัว,🤒,emergency,4,姐姐,ngo5 bong1 nei5 jam2 seoi2 tung4 jau1 sik3 tai2 haa6 jiu3 m4 jiu3 sik6 joek3.,我幫你飲水同休息，睇下要唔要食藥。,ให้ดื่มน้ำและพักผ่อนก่อน แล้วดูว่าต้องกินยาไหม
+8,發燒頭暈,เป็นไข้/เวียนหัว,🤒,emergency,5,婆婆,hou2 do1 ze6 nei5 ziu3 gu3 ngo5.,好，多謝你照顧我。,ขอบคุณที่ดูแลฉัน
+9,街市買菜,ซื้อผักที่ตลาด,🥬,market,1,姐姐,ni1 di1 coi3 gei2 do1 cin2 jat1 gan1 aa3?,呢啲菜幾多錢一斤呀？,ผักนี่กิโลกรัมละเท่าไหร่?
+9,街市買菜,ซื้อผักที่ตลาด,🥬,market,2,檔主,ji6 sap6 man1 jat1 gan1 hou2 san1 sin1.,二十蚊一斤，好新鮮。,ยี่สิบดอลลาร์หนึ่งกิโล สดมาก
+9,街市買菜,ซื้อผักที่ตลาด,🥬,market,3,姐姐,ho2 m4 ho2 ji3 peng4 siu2 siu2?,可唔可以平少少？,ลดราคาได้ไหม?
+9,街市買菜,ซื้อผักที่ตลาด,🥬,market,4,檔主,nei5 maai5 do1 di1 zau6 peng4 di1 bei2 nei5.,你買多啲就平啲畀你。,ซื้อมากกว่านี้ก็ลดให้
+9,街市買菜,ซื้อผักที่ตลาด,🥬,market,5,姐姐,hou2 aa3 gam2 ngo5 jiu3 loeng5 gan1.,好呀，咁我要兩斤。,ได้เลย งั้นขอสองกิโล
+9,街市買菜,ซื้อผักที่ตลาด,🥬,market,6,檔主,hou2 bong1 nei5 gaan2 leng3 di1.,好，幫你揀靚啲。,ได้ เดี๋ยวเลือกอันสวยให้
+10,買魚,ซื้อปลา,🐟,market,1,姐姐,ni1 tiu4 jyu2 san1 m4 san1 sin1?,呢條魚新唔新鮮？,ปลาตัวนี้สดไหม?
+10,買魚,ซื้อปลา,🐟,market,2,檔主,gam1 jat6 ngaam1 ngaam1 dou3 hou2 san1 sin1.,今日啱啱到，好新鮮。,เพิ่งมาถึงวันนี้เลย สดมาก
+10,買魚,ซื้อปลา,🐟,market,3,姐姐,ho2 m4 ho2 ji3 bong1 ngo5 cing1 lei5?,可唔可以幫我清理？,ช่วยทำความสะอาดให้ได้ไหม?
+10,買魚,ซื้อปลา,🐟,market,4,檔主,ho2 ji3 bong1 nei5 tong1 hou2.,可以，幫你劏好。,ได้เลย จัดการให้
+10,買魚,ซื้อปลา,🐟,market,5,姐姐,hou2 aa3 m4 goi1 nei5.,好呀，唔該你。,ดีเลย ขอบคุณ
+10,買魚,ซื้อปลา,🐟,market,6,檔主,dang2 jat1 dang2 hou2 faai3 hou2.,等一等，好快好。,รอแป๊บนึง เดี๋ยวเสร็จ`,
+
+  classifier: `char,jyutping,thai,english,example1_char,example1_jyut,example2_char,example2_jyut
+個,go3,ลักษณนามทั่วไป,general (person/thing),一個人,jat1 go3 jan4,一個蘋果,jat1 go3 ping4 gwo2
+隻,zek3,สัตว์/สิ่งเป็นคู่,animals / one of a pair,一隻狗,jat1 zek3 gau2,一隻手,jat1 zek3 sau2
+條,tiu4,สิ่งยาว,long thin things,一條魚,jat1 tiu4 jyu2,一條褲,jat1 tiu4 fu3
+張,zoeng1,สิ่งแบน,flat things,一張紙,jat1 zoeng1 zi2,一張枱,jat1 zoeng1 toi2
+本,bun2,หนังสือ/สมุด,books/notebooks,一本書,jat1 bun2 syu1,一本雜誌,jat1 bun2 zaap6 zi3
+杯,bui1,แก้ว/ถ้วย,cups/glasses,一杯茶,jat1 bui1 caa4,一杯水,jat1 bui1 seoi2
+碗,wun2,ชาม,bowls,一碗飯,jat1 wun2 faan6,一碗湯,jat1 wun2 tong1
+間,gaan1,ห้อง/ร้าน/บ้าน,rooms/shops/houses,一間屋,jat1 gaan1 uk1,一間舖,jat1 gaan1 pou3`,
+
+  sentence: `pattern_id,title,titleThai,example,jyutping,thai,part_order,text,jyut,role,roleThai,color
+1,基本句式,ประโยคพื้นฐาน,一個男仔食飯,jat1 go3 naam4 zai2 sik6 faan6,เด็กผู้ชายคนหนึ่งกินข้าว,1,一,jat1,數量,จำนวน,#dc2626
+1,基本句式,ประโยคพื้นฐาน,一個男仔食飯,jat1 go3 naam4 zai2 sik6 faan6,เด็กผู้ชายคนหนึ่งกินข้าว,2,個,go3,量詞,ลักษณนาม,#ea580c
+1,基本句式,ประโยคพื้นฐาน,一個男仔食飯,jat1 go3 naam4 zai2 sik6 faan6,เด็กผู้ชายคนหนึ่งกินข้าว,3,男仔,naam4 zai2,名詞,คำนาม,#ca8a04
+1,基本句式,ประโยคพื้นฐาน,一個男仔食飯,jat1 go3 naam4 zai2 sik6 faan6,เด็กผู้ชายคนหนึ่งกินข้าว,4,食飯,sik6 faan6,動詞,คำกริยา,#16a34a
+2,位置句式,ประโยคแสดงตำแหน่ง,個男仔企喺枱嘅右面,go3 naam4 zai2 kei5 hai2 toi2 ge3 jau6 min6,เด็กผู้ชายยืนอยู่ด้านขวาของโต๊ะ,1,個,go3,量詞,ลักษณนาม,#ea580c
+2,位置句式,ประโยคแสดงตำแหน่ง,個男仔企喺枱嘅右面,go3 naam4 zai2 kei5 hai2 toi2 ge3 jau6 min6,เด็กผู้ชายยืนอยู่ด้านขวาของโต๊ะ,2,男仔,naam4 zai2,名詞,คำนาม,#ca8a04
+2,位置句式,ประโยคแสดงตำแหน่ง,個男仔企喺枱嘅右面,go3 naam4 zai2 kei5 hai2 toi2 ge3 jau6 min6,เด็กผู้ชายยืนอยู่ด้านขวาของโต๊ะ,3,企,kei5,動詞,คำกริยา,#16a34a
+2,位置句式,ประโยคแสดงตำแหน่ง,個男仔企喺枱嘅右面,go3 naam4 zai2 kei5 hai2 toi2 ge3 jau6 min6,เด็กผู้ชายยืนอยู่ด้านขวาของโต๊ะ,4,喺,hai2,介詞,คำบุพบท,#2563eb
+2,位置句式,ประโยคแสดงตำแหน่ง,個男仔企喺枱嘅右面,go3 naam4 zai2 kei5 hai2 toi2 ge3 jau6 min6,เด็กผู้ชายยืนอยู่ด้านขวาของโต๊ะ,5,枱,toi2,名詞,คำนาม,#ca8a04
+2,位置句式,ประโยคแสดงตำแหน่ง,個男仔企喺枱嘅右面,go3 naam4 zai2 kei5 hai2 toi2 ge3 jau6 min6,เด็กผู้ชายยืนอยู่ด้านขวาของโต๊ะ,6,嘅,ge3,助詞,คำช่วย,#9333ea
+2,位置句式,ประโยคแสดงตำแหน่ง,個男仔企喺枱嘅右面,go3 naam4 zai2 kei5 hai2 toi2 ge3 jau6 min6,เด็กผู้ชายยืนอยู่ด้านขวาของโต๊ะ,7,右面,jau6 min6,方向,ทิศทาง,#0891b2
+3,動作句式,ประโยคแสดงการกระทำ,姐姐幫婆婆飲水,ze4 ze1 bong1 po4 po2 jam2 seoi2,พี่สาวช่วยคุณยายดื่มน้ำ,1,姐姐,ze4 ze1,主語,ประธาน,#dc2626
+3,動作句式,ประโยคแสดงการกระทำ,姐姐幫婆婆飲水,ze4 ze1 bong1 po4 po2 jam2 seoi2,พี่สาวช่วยคุณยายดื่มน้ำ,2,幫,bong1,動詞,คำกริยา,#16a34a
+3,動作句式,ประโยคแสดงการกระทำ,姐姐幫婆婆飲水,ze4 ze1 bong1 po4 po2 jam2 seoi2,พี่สาวช่วยคุณยายดื่มน้ำ,3,婆婆,po4 po2,賓語,กรรม,#ca8a04
+3,動作句式,ประโยคแสดงการกระทำ,姐姐幫婆婆飲水,ze4 ze1 bong1 po4 po2 jam2 seoi2,พี่สาวช่วยคุณยายดื่มน้ำ,4,飲水,jam2 seoi2,動作,การกระทำ,#2563eb
+4,疑問句式,ประโยคคำถาม,你食咗飯未呀？,nei5 sik6 zo2 faan6 mei6 aa3?,คุณกินข้าวหรือยัง?,1,你,nei5,主語,ประธาน,#dc2626
+4,疑問句式,ประโยคคำถาม,你食咗飯未呀？,nei5 sik6 zo2 faan6 mei6 aa3?,คุณกินข้าวหรือยัง?,2,食,sik6,動詞,คำกริยา,#16a34a
+4,疑問句式,ประโยคคำถาม,你食咗飯未呀？,nei5 sik6 zo2 faan6 mei6 aa3?,คุณกินข้าวหรือยัง?,3,咗,zo2,完成時,สำเร็จ,#9333ea
+4,疑問句式,ประโยคคำถาม,你食咗飯未呀？,nei5 sik6 zo2 faan6 mei6 aa3?,คุณกินข้าวหรือยัง?,4,飯,faan6,賓語,กรรม,#ca8a04
+4,疑問句式,ประโยคคำถาม,你食咗飯未呀？,nei5 sik6 zo2 faan6 mei6 aa3?,คุณกินข้าวหรือยัง?,5,未,mei6,疑問,คำถาม,#ea580c
+4,疑問句式,ประโยคคำถาม,你食咗飯未呀？,nei5 sik6 zo2 faan6 mei6 aa3?,คุณกินข้าวหรือยัง?,6,呀,aa3,語氣詞,คำเน้น,#6b7280`,
+
+  lessons: `lesson_id,type,chapter,title,soundcloud_url,youtube_url,vocab_ids,order,unlocked_by_default
+ch00_jyutping,Chapter,0,Jyutping,,https://youtu.be/HNAF8k69COo,,1,TRUE
+ch00_tones,Chapter,0,Tone Rules,,https://youtu.be/fmqHaywHB4Q,,1,TRUE
+ch00_pos,Chapter,0,Part of Speech,,https://youtu.be/8O9naHnUX0Q,,1,TRUE
+ch01,Chapter,1,ngo5 hai6... 我係...,https://on.soundcloud.com/SYKe7UKWQsdnlrnhYn,https://youtu.be/5SLLIBbaVq4,,1,TRUE
+extra01,Extra,1,Housework,,https://youtu.be/QmikHwvngEM,,2,FALSE
+grammar01,Grammar,1,(num) (class) (n),,https://youtu.be/624IrnIIFEw,,3,FALSE
+ch02,Chapter,2,lei1 dou6 呢度 go2 gou6 嗰度,https://on.soundcloud.com/pCYvoHCJuE0TJ7Mb2m,https://youtu.be/BcUzgIzc6VU,,4,FALSE
+ch03,Chapter,3,nei5 hou2! 你好！,https://on.soundcloud.com/F67LN3ylkSr43m5p3V,https://youtu.be/EppwYVxuRnw,,5,FALSE
+grammar02,Grammar,2,hou2(adj) 好(adj),,https://youtu.be/OKL1ET6tE9s,,6,FALSE
+grammar03,Grammar,3,bin2 dou6? 邊度？,,https://youtu.be/jFmGBW-9zes,,7,FALSE
+grammar04,Grammar,4,gei2 do1(class)? 幾多(class)?,,https://youtu.be/6czCuHYHDrE,,8,FALSE`
 };
 
-// ── CSV PARSER ────────────────────────────────────────────────
+// ── Google Sheets URLs (primary source) ──────────────────────
+const SHEET_URLS = {
+  vocab:      'https://docs.google.com/spreadsheets/d/e/2PACX-1vRNbMKKRPjdRLCIJlgK9SZvNu2pbqUzaMCR2RuxDHQ1LWKXw6jjeBYjH6_wPKI7S2TtiEg00cqcSM7d/pub?gid=0&single=true&output=csv',
+  dialogue:   'https://docs.google.com/spreadsheets/d/e/2PACX-1vRNbMKKRPjdRLCIJlgK9SZvNu2pbqUzaMCR2RuxDHQ1LWKXw6jjeBYjH6_wPKI7S2TtiEg00cqcSM7d/pub?gid=950167970&single=true&output=csv',
+  classifier: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRNbMKKRPjdRLCIJlgK9SZvNu2pbqUzaMCR2RuxDHQ1LWKXw6jjeBYjH6_wPKI7S2TtiEg00cqcSM7d/pub?gid=232509116&single=true&output=csv',
+  sentence:   'https://docs.google.com/spreadsheets/d/e/2PACX-1vRNbMKKRPjdRLCIJlgK9SZvNu2pbqUzaMCR2RuxDHQ1LWKXw6jjeBYjH6_wPKI7S2TtiEg00cqcSM7d/pub?gid=1005757231&single=true&output=csv',
+  lessons:    'https://docs.google.com/spreadsheets/d/e/2PACX-1vRNbMKKRPjdRLCIJlgK9SZvNu2pbqUzaMCR2RuxDHQ1LWKXw6jjeBYjH6_wPKI7S2TtiEg00cqcSM7d/pub?gid=1206393447&single=true&output=csv',
+};
+
+async function tryFetchSheet(name, url) {
+  try {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const text = await r.text();
+    if (!text || text.trim().startsWith('<')) throw new Error('not CSV');
+    const rows = parseCSV(text);
+    if (rows.length === 0) throw new Error('empty');
+    console.log('[Sheet OK]', name, rows.length + ' rows');
+    return rows;
+  } catch (e) {
+    console.warn('[Sheet FAIL]', name, e.message);
+    return null;
+  }
+}
+
+function setLoadMsg(msg) {
+  const el = $('loadingScreen');
+  if (el) el.innerHTML = '<div class="spinner"></div><div style="margin-top:12px;font-size:14px">' + msg + '</div>';
+}
+
+async function loadData() {
+  setLoadMsg('載入詞彙...');
+  const vocab = await tryFetchSheet('vocab', SHEET_URLS.vocab);
+
+  setLoadMsg('載入對話...');
+  const dialogue = await tryFetchSheet('dialogue', SHEET_URLS.dialogue);
+
+  setLoadMsg('載入量詞...');
+  const classifier = await tryFetchSheet('classifier', SHEET_URLS.classifier);
+
+  setLoadMsg('載入句式...');
+  const sentence = await tryFetchSheet('sentence', SHEET_URLS.sentence);
+
+  setLoadMsg('載入課堂...');
+  const lessons = await tryFetchSheet('lessons', SHEET_URLS.lessons);
+
+  // Core sheets: use inline fallback if fetch failed
+  S.data.vocab      = vocab      || parseCSV(INLINE.vocab);
+  S.data.dialogue   = dialogue   || parseCSV(INLINE.dialogue);
+  S.data.classifier = classifier || parseCSV(INLINE.classifier);
+  S.data.sentence   = sentence   || parseCSV(INLINE.sentence);
+  S.data.lessons    = lessons    || parseCSV(INLINE.lessons);
+
+  // Report which source was used
+  const usedInline = [];
+  if (!vocab)      usedInline.push('vocab');
+  if (!dialogue)   usedInline.push('dialogue');
+  if (!classifier) usedInline.push('classifier');
+  if (!sentence)   usedInline.push('sentence');
+  if (!lessons)    usedInline.push('lessons (using built-in)');
+  if (usedInline.length) console.warn('[Inline fallback used for]', usedInline.join(', '));
+
+  // Fix tone column
+  S.data.vocab.forEach(w => {
+    if (w.tone && w.tone.includes('/')) w.tone = w.tone.split('/').pop().trim();
+  });
+
+  $('loadingScreen').style.display = 'none';
+  initAll();
+}
+
+
+// ── CSV PARSER ─────────────────────────────────────────────────
 function parseCSV(text) {
   const lines = text.trim().split('\n');
   const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,''));
@@ -426,7 +609,7 @@ const S = {
   speech: { speaking: null, autoIdx: null, autoTimer: null },
 };
 
-// ── TONES (static) ────────────────────────────────────────────
+// ── TONES ─────────────────────────────────────────────────────
 const TONES = [
   {num:1,name:'陰平',desc:'高平調',color:'#dc2626',thai:'เสียงสูงระดับ'},
   {num:2,name:'陰上',desc:'高升調',color:'#ea580c',thai:'เสียงสูงขึ้น'},
@@ -436,7 +619,6 @@ const TONES = [
   {num:6,name:'陽去',desc:'低平調',color:'#9333ea',thai:'เสียงต่ำระดับ'},
 ];
 
-// ── COLORS (game, extended pool) ─────────────────────────────
 const ALL_COLORS = [
   {char:'紅色',jyutping:'hung4 sik1',thai:'สีแดง',hex:'#dc2626'},
   {char:'深紅色',jyutping:'sam1 hung4 sik1',thai:'สีแดงเข้ม',hex:'#7f1d1d'},
@@ -532,94 +714,11 @@ function shuffle(arr) {
   for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
   return a;
 }
-function h(tag, cls, inner='', attrs={}) {
+function h(tag, cls, inner='') {
   const el = document.createElement(tag);
   if (cls) el.className = cls;
   if (inner) el.innerHTML = inner;
-  Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,v));
   return el;
-}
-
-// ── FETCH ALL DATA ────────────────────────────────────────────
-// Fetch one sheet safely – returns [] on failure, logs which sheet failed
-async function fetchSheet(name, url) {
-  try {
-    // Add cache-busting to avoid stale cached errors
-    const bustUrl = url + '&_t=' + Date.now();
-    const r = await fetch(bustUrl, { cache: 'no-store' });
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const text = await r.text();
-    // Detect HTML error page instead of CSV
-    if (text.trim().startsWith('<')) throw new Error('Sheet not published as CSV. Go to File → Share → Publish to web → choose the sheet → CSV format.');
-    if (text.trim().length < 10) throw new Error('Empty response');
-    const rows = parseCSV(text);
-    console.log('Sheet [' + name + '] OK:', rows.length, 'rows');
-    return rows;
-  } catch(e) {
-    console.warn('Sheet [' + name + '] FAILED:', e.message);
-    return null;
-  }
-}
-
-async function loadData() {
-  // Show loading
-  $('loadingScreen').style.display = 'flex';
-
-  const results = await Promise.all([
-    fetchSheet('vocab',      URLS.vocab),
-    fetchSheet('dialogue',   URLS.dialogue),
-    fetchSheet('classifier', URLS.classifier),
-    fetchSheet('sentence',   URLS.sentence),
-    fetchSheet('lessons',    URLS.lessons),
-  ]);
-
-  const [v, d, c, s, l] = results;
-
-  // Core sheets (vocab, dialogue, classifier, sentence) must succeed
-  const coreFailed = [
-    v === null && 'vocab (詞彙)',
-    d === null && 'dialogue (對話)',
-    c === null && 'classifier (量詞)',
-    s === null && 'sentence (句式)',
-  ].filter(Boolean);
-
-  if (coreFailed.length) {
-    $('loadingScreen').innerHTML = `
-      <div class="error-box" style="max-width:340px;margin:16px auto">
-        <div style="font-size:16px;margin-bottom:8px">⚠️ 載入失敗</div>
-        <div style="margin-bottom:8px">以下 Sheet 未能讀取：</div>
-        <strong>${coreFailed.join('<br>')}</strong>
-        <div style="margin-top:10px;font-size:12px;color:#7f1d1d">
-          修復步驟：<br>
-          1. 開 Google Sheets<br>
-          2. 檔案 → 共用 → 發佈到網路<br>
-          3. 選對應分頁 → 格式選 CSV → 發佈<br>
-          4. 然後按下面重新載入
-        </div>
-        <button onclick="location.reload()" style="margin-top:12px;padding:8px 20px;background:#1a56db;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:700;width:100%">🔄 重新載入</button>
-      </div>`;
-    return;
-  }
-
-  S.data.vocab      = v;
-  S.data.dialogue   = d;
-  S.data.classifier = c;
-  S.data.sentence   = s;
-  S.data.lessons    = l || []; // lessons optional – graceful if Sheet5 not yet published
-
-  // Fix tone column (Google Sheets sometimes formats as date)
-  S.data.vocab.forEach(w => {
-    if (w.tone && w.tone.includes('/')) w.tone = w.tone.split('/').pop().trim();
-    if (w.tone && w.tone.match(/^\d{4}/)) w.tone = ''; // date artifact
-  });
-
-  $('loadingScreen').style.display = 'none';
-
-  if (S.data.lessons.length === 0) {
-    console.warn('Sheet5 (lessons) not loaded – 課堂 tab will be empty. Publish Sheet5 as CSV to enable.');
-  }
-
-  initAll();
 }
 
 // ── INIT ALL ──────────────────────────────────────────────────
@@ -639,7 +738,7 @@ function initAll() {
   } catch(e) {
     console.error('initAll error:', e);
     $('loadingScreen').style.display = 'flex';
-    $('loadingScreen').innerHTML = `<div class="error-box">⚠️ 初始化出錯：${e.message}<br><button onclick="location.reload()" style="margin-top:8px;padding:7px 16px;background:#1a56db;color:#fff;border:none;border-radius:8px;cursor:pointer">重新載入</button></div>`;
+    $('loadingScreen').innerHTML = '<div class="error-box">⚠️ 初始化出錯：' + e.message + '<br><button onclick="location.reload()" style="margin-top:8px;padding:7px 16px;background:#1a56db;color:#fff;border:none;border-radius:8px;cursor:pointer">重新載入</button></div>';
   }
 }
 
@@ -660,281 +759,204 @@ function showTab(tab) {
 }
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('act'));
-  const p = $(`page-${id}`);
+  const p = $('page-'+id);
   if (p) p.classList.add('act');
 }
 
 // ── HOME ──────────────────────────────────────────────────────
 function buildHome() {
-  // tones
-  $('toneGrid').innerHTML = TONES.map(t=>`
-    <div class="tone-card" style="border-left-color:${t.color}">
-      <div class="tone-n" style="color:${t.color}">${t.num}</div>
-      <div class="tone-name">${t.name}</div>
-      <div class="tone-thai">${t.thai}</div>
-    </div>`).join('');
-  // zi table
-  $('ziTable').innerHTML = [1,2,3,4,5,6,7,8,9].map(n=>`
-    <div class="zi-row">
-      <span style="font-family:'Space Mono';color:${n===9?'#dc2626':n===6?'#2563eb':'#374151'}">${n}個字</span>
-      <span style="font-weight:700">${n*5}分鐘</span>
-      <span style="color:#9ca3af;font-family:'Noto Sans Thai'">${n*5} นาที</span>
-    </div>`).join('');
-  // nav cards
-  const modules = [
-    {icon:'📚',title:'詞彙學習卡',sub:'翻卡練習基本詞彙',tab:'vocab'},
-    {icon:'📐',title:'句子結構',sub:'睇清楚廣東話句式',tab:'sentence'},
-    {icon:'🀄',title:'量詞',sub:'個・隻・條・張…',tab:'classifier'},
-    {icon:'💬',title:'情景對話',sub:'照顧・街市・緊急情況',tab:'dialogue'},
-    {icon:'🎮',title:'互動遊戲',sub:'顏色・時間・方向・量詞',tab:'game'},
-  ];
-  $('navCards').innerHTML = modules.map(m=>`
-    <div class="nav-card" onclick="showTab('${m.tab}')">
-      <div><div class="nav-icon">${m.icon}</div><div class="nav-title">${m.title}</div><div class="nav-sub">${m.sub}</div></div>
-      <div class="nav-arrow">›</div>
-    </div>`).join('');
+  $('toneGrid').innerHTML = TONES.map(t=>'<div class="tone-card" style="border-left-color:'+t.color+'"><div class="tone-n" style="color:'+t.color+'">'+t.num+'</div><div class="tone-name">'+t.name+'</div><div class="tone-thai">'+t.thai+'</div></div>').join('');
+  $('ziTable').innerHTML = [1,2,3,4,5,6,7,8,9].map(n=>'<div class="zi-row"><span style="font-family:\'Space Mono\';color:'+(n===9?'#dc2626':n===6?'#2563eb':'#374151')+'">'+n+'個字</span><span style="font-weight:700">'+n*5+'分鐘</span><span style="color:#9ca3af;font-family:\'Noto Sans Thai\'">'+n*5+' นาที</span></div>').join('');
+  const modules=[{icon:'📚',title:'詞彙學習卡',sub:'翻卡練習基本詞彙',tab:'vocab'},{icon:'📐',title:'句子結構',sub:'睇清楚廣東話句式',tab:'sentence'},{icon:'🀄',title:'量詞',sub:'個・隻・條・張…',tab:'classifier'},{icon:'💬',title:'情景對話',sub:'照顧・街市・緊急情況',tab:'dialogue'},{icon:'📖',title:'課堂材料',sub:'Chapter・Grammar・Extra',tab:'lessons'},{icon:'🎮',title:'互動遊戲',sub:'顏色・時間・方向・量詞',tab:'game'}];
+  $('navCards').innerHTML = modules.map(m=>'<div class="nav-card" onclick="showTab(\''+m.tab+'\')"><div><div class="nav-icon">'+m.icon+'</div><div class="nav-title">'+m.title+'</div><div class="nav-sub">'+m.sub+'</div></div><div class="nav-arrow">›</div></div>').join('');
 }
 
 // ── VOCAB ─────────────────────────────────────────────────────
 function buildVocab() {
-  const cats = ['all',...new Set(S.data.vocab.map(w=>w.category))];
-  const catLabel = {all:'全部',greetings:'打招呼',basics:'基礎',pronouns:'代詞',food:'飲食',shopping:'購物'};
-  const bar = $('vocabFilterBar');
+  const cats=['all',...new Set(S.data.vocab.map(w=>w.category))];
+  const catLabel={all:'全部',greetings:'打招呼',basics:'基礎',pronouns:'代詞',food:'飲食',shopping:'購物'};
+  const bar=$('vocabFilterBar');
   cats.forEach(c=>{
-    const btn = h('button','f-btn'+(c==='all'?' act':''), catLabel[c]||c);
-    btn.addEventListener('click',()=>{ S.vocabCat=c; S.vocabIdx=0; renderVocab(); bar.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('act')); btn.classList.add('act'); });
+    const btn=h('button','f-btn'+(c==='all'?' act':''),catLabel[c]||c);
+    btn.addEventListener('click',()=>{S.vocabCat=c;S.vocabIdx=0;renderVocab();bar.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('act'));btn.classList.add('act');});
     bar.appendChild(btn);
   });
-  $('fcPrev').addEventListener('click',()=>{ const f=filtered(); S.vocabIdx=(S.vocabIdx-1+f.length)%f.length; renderCard(); });
-  $('fcNext').addEventListener('click',()=>{ const f=filtered(); S.vocabIdx=(S.vocabIdx+1)%f.length; renderCard(); });
+  $('fcPrev').addEventListener('click',()=>{const f=filtered();S.vocabIdx=(S.vocabIdx-1+f.length)%f.length;renderCard();});
+  $('fcNext').addEventListener('click',()=>{const f=filtered();S.vocabIdx=(S.vocabIdx+1)%f.length;renderCard();});
   $('fcWrap').addEventListener('click',()=>$('fcWrap').classList.toggle('flip'));
-  $('fcSpeakBtn').addEventListener('click',e=>{ e.stopPropagation(); const w=filtered()[S.vocabIdx]; if(w) Speech.speak(w.char); });
+  $('fcSpeakBtn').addEventListener('click',e=>{e.stopPropagation();const w=filtered()[S.vocabIdx];if(w)Speech.speak(w.char);});
   renderVocab();
 }
-function filtered() {
-  return S.vocabCat==='all' ? S.data.vocab : S.data.vocab.filter(w=>w.category===S.vocabCat);
-}
-function renderVocab() { renderCard(); renderVocabList(); }
-function renderCard() {
-  const f=filtered(), w=f[S.vocabIdx];
-  if(!w) return;
+function filtered(){return S.vocabCat==='all'?S.data.vocab:S.data.vocab.filter(w=>w.category===S.vocabCat);}
+function renderVocab(){renderCard();renderVocabList();}
+function renderCard(){
+  const f=filtered(),w=f[S.vocabIdx];if(!w)return;
   $('fcWrap').classList.remove('flip');
-  $('fcJyut').textContent = w.jyutping;
-  $('fcChar').textContent = w.char;
-  $('fcThai').textContent = w.thai;
-  $('fcEn').textContent = w.english;
-  $('fcCharSm').textContent = w.char;
-  $('fcTone').textContent = 'tone: '+w.tone;
-  $('fcCount').textContent = `${S.vocabIdx+1} / ${f.length}`;
-  if (!Speech.supported) $('fcSpeakBtn').style.display='none';
+  $('fcJyut').textContent=w.jyutping;$('fcChar').textContent=w.char;
+  $('fcThai').textContent=w.thai;// english hidden
+  $('fcCharSm').textContent=w.char;$('fcTone').textContent='tone: '+w.tone;
+  $('fcCount').textContent=(S.vocabIdx+1)+' / '+f.length;
+  if(!Speech.supported)$('fcSpeakBtn').style.display='none';
 }
-function renderVocabList() {
-  const f=filtered();
-  $('vocabList').innerHTML = f.map((w,i)=>`
-    <div class="v-row${i===S.vocabIdx?' act':''}" onclick="selectVocab(${i})">
-      <div><div class="v-jyut">${w.jyutping}</div><div class="v-char">${w.char}</div></div>
-      <div class="v-right"><div class="v-thai">${w.thai}</div><div class="v-en">${w.english}</div></div>
-    </div>`).join('');
+function renderVocabList(){
+  $('vocabList').innerHTML=filtered().map((w,i)=>'<div class="v-row'+(i===S.vocabIdx?' act':'')+'" onclick="selectVocab('+i+')"><div><div class="v-jyut">'+w.jyutping+'</div><div class="v-char">'+w.char+'</div></div><div class="v-right"><div class="v-thai">'+w.thai+'</div></div></div>').join('');
 }
-window.selectVocab = i => { S.vocabIdx=i; renderVocab(); };
+window.selectVocab=i=>{S.vocabIdx=i;renderVocab();};
 
 // ── SENTENCE STRUCTURE ────────────────────────────────────────
-function buildSentence() {
-  const rows = S.data.sentence;
-  const ids = [...new Set(rows.map(r=>r.pattern_id))];
-  S.ssPatternId = ids[0];
-  const bar = $('ssFilterBar');
+function buildSentence(){
+  const rows=S.data.sentence;
+  const ids=[...new Set(rows.map(r=>r.pattern_id))];
+  S.ssPatternId=ids[0];
+  const bar=$('ssFilterBar');
   ids.forEach(id=>{
-    const meta = rows.find(r=>r.pattern_id===id);
-    const btn = h('button','f-btn'+(id===ids[0]?' act':''), meta.title);
-    btn.addEventListener('click',()=>{ S.ssPatternId=id; renderSentence(); bar.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('act')); btn.classList.add('act'); });
+    const meta=rows.find(r=>r.pattern_id===id);
+    const btn=h('button','f-btn'+(id===ids[0]?' act':''),meta.title);
+    btn.addEventListener('click',()=>{S.ssPatternId=id;renderSentence();bar.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('act'));btn.classList.add('act');});
     bar.appendChild(btn);
   });
   renderSentence();
 }
-function renderSentence() {
-  const rows = S.data.sentence.filter(r=>r.pattern_id===S.ssPatternId);
+function renderSentence(){
+  const rows=S.data.sentence.filter(r=>r.pattern_id===S.ssPatternId);
   if(!rows.length){$('ssContent').innerHTML='';return;}
-  const meta = rows[0];
-  const tokens = rows.sort((a,b)=>+a.part_order-+b.part_order);
-  $('ssContent').innerHTML = `
-    <div class="ss-card">
-      <div style="font-size:12px;color:var(--text-sub);font-family:'Noto Sans Thai';margin-bottom:8px">${meta.titleThai}</div>
-      <div class="ss-ex">${meta.example}</div>
-      <div class="ss-jyut">${meta.jyutping}</div>
-      <div class="ss-thai">${meta.thai}</div>
-    </div>
-    <div class="ss-tokens">
-      ${tokens.map(t=>`
-        <div class="ss-tok" style="border-color:${t.color}">
-          <div class="tok-role" style="color:${t.color}">${t.role}</div>
-          <div class="tok-char">${t.text}</div>
-          <div class="tok-jyut">${t.jyut}</div>
-          <div class="tok-thai">${t.roleThai}</div>
-        </div>`).join('')}
-    </div>`;
+  const meta=rows[0];
+  const tokens=rows.sort((a,b)=>+a.part_order-+b.part_order);
+  $('ssContent').innerHTML='<div class="ss-card"><div style="font-size:12px;color:var(--text-sub);font-family:\'Noto Sans Thai\';margin-bottom:8px">'+meta.titleThai+'</div><div class="ss-ex">'+meta.example+'</div><div class="ss-jyut">'+meta.jyutping+'</div><div class="ss-thai">'+meta.thai+'</div></div><div class="ss-tokens">'+tokens.map(t=>'<div class="ss-tok" style="border-color:'+t.color+'"><div class="tok-role" style="color:'+t.color+'">'+t.role+'</div><div class="tok-char">'+t.text+'</div><div class="tok-jyut">'+t.jyut+'</div><div class="tok-thai">'+t.roleThai+'</div></div>').join('')+'</div>';
 }
 
 // ── CLASSIFIER ────────────────────────────────────────────────
-function buildClassifier() {
-  $('clfGrid').innerHTML = S.data.classifier.map(c=>`
-    <div class="clf-card">
-      <div class="clf-jyut">${c.jyutping}</div>
-      <div class="clf-char">${c.char}</div>
-      <div class="clf-thai">${c.thai}</div>
-      <div class="clf-en">${c.english}</div>
-      <div class="clf-ex">• ${c.example1_char} (${c.example1_jyut})<br>• ${c.example2_char} (${c.example2_jyut})</div>
-    </div>`).join('');
+function buildClassifier(){
+  $('clfGrid').innerHTML=S.data.classifier.map(c=>'<div class="clf-card"><div class="clf-jyut">'+c.jyutping+'</div><div class="clf-char">'+c.char+'</div><div class="clf-thai">'+c.thai+'</div><div class="clf-en">'+c.english+'</div><div class="clf-ex">• '+c.example1_char+' ('+c.example1_jyut+')<br>• '+c.example2_char+' ('+c.example2_jyut+')</div></div>').join('');
 }
 
 // ── DIALOGUE ─────────────────────────────────────────────────
-function buildDialogue() {
-  const cats = ['all',...new Set(S.data.dialogue.map(r=>r.category))];
-  const catLabel = {all:'全部',original:'📚 基礎',care:'👵 照顧',emergency:'🚨 緊急',market:'🥬 街市'};
-  const catBar = $('dlCatBar');
+function buildDialogue(){
+  const cats=['all',...new Set(S.data.dialogue.map(r=>r.category))];
+  const catLabel={all:'全部',original:'📚 基礎',care:'👵 照顧',emergency:'🚨 緊急',market:'🥬 街市'};
+  const catBar=$('dlCatBar');
   cats.forEach(c=>{
-    const btn = h('button','f-btn'+(c==='all'?' act':''), catLabel[c]||c);
-    btn.addEventListener('click',()=>{ S.dlCat=c; S.dlId=null; renderDlTitles(); catBar.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('act')); btn.classList.add('act'); });
+    const btn=h('button','f-btn'+(c==='all'?' act':''),catLabel[c]||c);
+    btn.addEventListener('click',()=>{S.dlCat=c;S.dlId=null;renderDlTitles();catBar.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('act'));btn.classList.add('act');});
     catBar.appendChild(btn);
   });
-  $('togJyut').addEventListener('click',()=>{ S.showJyut=!S.showJyut; $('togJyut').classList.toggle('on',S.showJyut); renderDlLines(); });
-  $('togThai').addEventListener('click',()=>{ S.showThai=!S.showThai; $('togThai').classList.toggle('on',S.showThai); renderDlLines(); });
-  $('playAllBtn').addEventListener('click',()=>{ if(S.speech.autoIdx!==null){stopAutoPlay();}else{startAutoPlay();} });
+  $('togJyut').addEventListener('click',()=>{S.showJyut=!S.showJyut;$('togJyut').classList.toggle('on',S.showJyut);renderDlLines();});
+  $('togThai').addEventListener('click',()=>{S.showThai=!S.showThai;$('togThai').classList.toggle('on',S.showThai);renderDlLines();});
+  $('playAllBtn').addEventListener('click',()=>{if(S.speech.autoIdx!==null){stopAutoPlay();}else{startAutoPlay();}});
   renderDlTitles();
 }
-function dlFiltered() {
-  const rows=S.data.dialogue;
-  const ids=[...new Set((S.dlCat==='all'?rows:rows.filter(r=>r.category===S.dlCat)).map(r=>r.dialogue_id))];
-  return ids;
-}
-function renderDlTitles() {
+function dlFiltered(){const rows=S.data.dialogue;const ids=[...new Set((S.dlCat==='all'?rows:rows.filter(r=>r.category===S.dlCat)).map(r=>r.dialogue_id))];return ids;}
+function renderDlTitles(){
   stopAutoPlay();
   const ids=dlFiltered();
-  if(!S.dlId||!ids.includes(S.dlId)) S.dlId=ids[0];
-  const bar=$('dlTitleBar');
-  bar.innerHTML='';
+  if(!S.dlId||!ids.includes(S.dlId))S.dlId=ids[0];
+  const bar=$('dlTitleBar');bar.innerHTML='';
   const metas={};
-  S.data.dialogue.forEach(r=>{ if(!metas[r.dialogue_id]) metas[r.dialogue_id]={title:r.title,emoji:r.emoji}; });
+  S.data.dialogue.forEach(r=>{if(!metas[r.dialogue_id])metas[r.dialogue_id]={title:r.title,emoji:r.emoji};});
   ids.forEach(id=>{
     const m=metas[id];
-    const btn=h('button','f-btn'+(id===S.dlId?' act':''),`${m.emoji} ${m.title}`);
-    btn.addEventListener('click',()=>{ S.dlId=id; renderDlFull(); bar.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('act')); btn.classList.add('act'); stopAutoPlay(); });
+    const btn=h('button','f-btn'+(id===S.dlId?' act':''),m.emoji+' '+m.title);
+    btn.addEventListener('click',()=>{S.dlId=id;renderDlFull();bar.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('act'));btn.classList.add('act');stopAutoPlay();});
     bar.appendChild(btn);
   });
   renderDlFull();
 }
-function renderDlFull() {
+function renderDlFull(){
   const rows=S.data.dialogue.filter(r=>r.dialogue_id===S.dlId).sort((a,b)=>+a.line_order-+b.line_order);
   if(!rows.length)return;
   const meta=rows[0];
-  $('dlHeader').innerHTML=`<div class="dl-h-title">${meta.emoji} ${meta.title}</div><div class="dl-h-thai">${meta.titleThai}</div>`;
+  $('dlHeader').innerHTML='<div class="dl-h-title">'+meta.emoji+' '+meta.title+'</div><div class="dl-h-thai">'+meta.titleThai+'</div>';
   renderDlLines();
 }
-function renderDlLines() {
+function renderDlLines(){
   const rows=S.data.dialogue.filter(r=>r.dialogue_id===S.dlId).sort((a,b)=>+a.line_order-+b.line_order);
-  $('dlLines').innerHTML=rows.map((line,i)=>`
-    <div class="dl-line${S.speech.autoIdx!==null&&S.speech.autoIdx!==i?' dim':''}" id="dlLine${i}">
-      <div class="dl-spk">${line.speaker}</div>
-      <div class="dl-bubble${S.speech.autoIdx===i?' active':''}" id="dlBubble${i}">
-        ${S.showJyut?`<div class="dl-jyut">${line.jyutping}</div>`:''}
-        <div class="dl-canto-row">
-          <div class="dl-canto">${line.cantonese}</div>
-          ${Speech.supported && S.speech.autoIdx===null?`<button class="spk-btn" onclick="speakLine('${line.cantonese.replace(/'/g,"\\'")}',this)">▶ 聽</button>`:''}
-        </div>
-        ${S.showThai?`<div class="dl-thai">${line.thai}</div>`:''}
-      </div>
-    </div>`).join('');
+  $('dlLines').innerHTML=rows.map((line,i)=>{
+    const isAuto=S.speech.autoIdx!==null;
+    const isActive=S.speech.autoIdx===i;
+    return '<div class="dl-line'+(isAuto&&!isActive?' dim':'')+'" id="dlLine'+i+'"><div class="dl-spk">'+line.speaker+'</div><div class="dl-bubble'+(isActive?' active':'')+'" id="dlBubble'+i+'">'+(S.showJyut?'<div class="dl-jyut">'+line.jyutping+'</div>':'')+'<div class="dl-canto-row"><div class="dl-canto">'+line.cantonese+'</div>'+(Speech.supported&&!isAuto?'<button class="spk-btn" onclick="speakLine(\''+line.cantonese.replace(/'/g,"\\'")+'\'  ,this)">▶ 聽</button>':'')+'</div>'+(S.showThai?'<div class="dl-thai">'+line.thai+'</div>':'')+'</div></div>';
+  }).join('');
 }
-window.speakLine = (text, btn) => {
-  document.querySelectorAll('.spk-btn').forEach(b=>{ b.textContent='▶ 聽'; b.classList.remove('playing'); });
-  btn.textContent='■ 停'; btn.classList.add('playing');
-  Speech.speak(text, ()=>{ btn.textContent='▶ 聽'; btn.classList.remove('playing'); });
+window.speakLine=(text,btn)=>{
+  document.querySelectorAll('.spk-btn').forEach(b=>{b.textContent='▶ 聽';b.classList.remove('playing');});
+  btn.textContent='■ 停';btn.classList.add('playing');
+  Speech.speak(text,()=>{btn.textContent='▶ 聽';btn.classList.remove('playing');});
 };
-function startAutoPlay() {
+function startAutoPlay(){
   const rows=S.data.dialogue.filter(r=>r.dialogue_id===S.dlId).sort((a,b)=>+a.line_order-+b.line_order);
-  if(!rows.length||!Speech.supported) return;
-  $('playAllBtn').textContent='■ 停止'; $('playAllBtn').classList.add('playing');
-  S.speech.autoIdx=0;
-  playAutoLine(rows);
+  if(!rows.length||!Speech.supported)return;
+  $('playAllBtn').textContent='■ 停止';$('playAllBtn').classList.add('playing');
+  S.speech.autoIdx=0;playAutoLine(rows);
 }
-function playAutoLine(rows) {
-  if(S.speech.autoIdx===null||S.speech.autoIdx>=rows.length){ stopAutoPlay(); return; }
+function playAutoLine(rows){
+  if(S.speech.autoIdx===null||S.speech.autoIdx>=rows.length){stopAutoPlay();return;}
   renderDlLines();
-  Speech.speak(rows[S.speech.autoIdx].cantonese, ()=>{
-    if(S.speech.autoIdx===null) return;
-    S.speech.autoTimer=setTimeout(()=>{ if(S.speech.autoIdx!==null){ S.speech.autoIdx++; playAutoLine(rows); } },400);
+  Speech.speak(rows[S.speech.autoIdx].cantonese,()=>{
+    if(S.speech.autoIdx===null)return;
+    S.speech.autoTimer=setTimeout(()=>{if(S.speech.autoIdx!==null){S.speech.autoIdx++;playAutoLine(rows);}},400);
   });
 }
-function stopAutoPlay() {
-  Speech.stop();
-  clearTimeout(S.speech.autoTimer);
-  S.speech.autoIdx=null;
-  $('playAllBtn').textContent='▶ 全部播放'; $('playAllBtn').classList.remove('playing');
+function stopAutoPlay(){
+  Speech.stop();clearTimeout(S.speech.autoTimer);S.speech.autoIdx=null;
+  $('playAllBtn').textContent='▶ 全部播放';$('playAllBtn').classList.remove('playing');
   renderDlLines();
 }
 
 // ── GAMES ─────────────────────────────────────────────────────
-const GAME_TOTAL = 10;
-let GS = {}; // game state
-
-function buildGame() { setGameTab('color'); }
-function setGameTab(tab) {
+const GAME_TOTAL=10;
+let GS={};
+function buildGame(){setGameTab('color');}
+function setGameTab(tab){
   S.gameTab=tab;
   document.querySelectorAll('.g-tab').forEach(b=>b.classList.toggle('act',b.dataset.game===tab));
   initGame(tab);
 }
-function initGame(tab) {
-  GS = { tab, score:0, round:0, done:false, pool:[], pi:0, current:null, options:[], feedback:null, timer:null };
-  if(tab==='color')     GS.pool=shuffle(ALL_COLORS);
-  if(tab==='direction') GS.pool=shuffle(DIR_SCENARIOS);
-  if(tab==='classifier'){ GS.pool=shuffle(CLF_QUESTIONS); }
+function initGame(tab){
+  GS={tab,score:0,round:0,done:false,pool:[],pi:0,current:null,options:[],feedback:null,timer:null};
+  if(tab==='color')GS.pool=shuffle(ALL_COLORS);
+  if(tab==='direction')GS.pool=shuffle(DIR_SCENARIOS);
+  if(tab==='classifier')GS.pool=shuffle(CLF_QUESTIONS);
   renderGame();
 }
-function nextRound() {
-  GS.feedback=null; GS.round++;
-  if(GS.round>=GAME_TOTAL){ GS.done=true; recordScore(); renderGame(); return; }
+function nextRound(){
+  GS.feedback=null;GS.round++;
+  if(GS.round>=GAME_TOTAL){GS.done=true;recordScore();renderGame();return;}
   if(GS.tab==='color'||GS.tab==='direction'||GS.tab==='classifier'){
     GS.pi=(GS.pi+1)%GS.pool.length;
-    if(GS.pi===0) GS.pool=shuffle(GS.pool);
+    if(GS.pi===0)GS.pool=shuffle(GS.pool);
   }
+  if(GS.tab==='time')GS.current=null;
   renderGame();
 }
-function recordScore() {
-  S.totalScore+=GS.score;
-  $('totalScore').textContent='★ '+S.totalScore;
+function recordScore(){
+  S.totalScore+=GS.score;$('totalScore').textContent='★ '+S.totalScore;
   S.scoreHistory.push({game:S.gameTab,score:GS.score,time:new Date().toLocaleTimeString('en-HK',{hour:'2-digit',minute:'2-digit'})});
   renderHistory();
 }
-function renderHistory() {
+function renderHistory(){
   const names={color:'🎨 顏色',time:'⏰ 時間',direction:'🧭 方向',classifier:'🀄 量詞'};
   const recent=S.scoreHistory.slice(-6).reverse();
   if(!recent.length){$('scoreHistory').innerHTML='';return;}
-  $('scoreHistory').innerHTML=`<div class="sec" style="margin-top:16px">📊 得分紀錄</div>`+
-    recent.map(h=>`<div class="hist-item"><span>${names[h.game]}</span><span style="font-family:'Space Mono';color:var(--yellow);font-weight:700">${h.score}分</span><span style="color:var(--text-muted);font-size:11px">${h.time}</span></div>`).join('');
+  $('scoreHistory').innerHTML='<div class="sec" style="margin-top:16px">📊 得分紀錄</div>'+recent.map(h=>'<div class="hist-item"><span>'+names[h.game]+'</span><span style="font-family:\'Space Mono\';color:var(--yellow);font-weight:700">'+h.score+'分</span><span style="color:var(--text-muted);font-size:11px">'+h.time+'</span></div>').join('');
 }
-
-function answerGame(isCorrect) {
-  if(GS.feedback) return;
+function answerGame(isCorrect){
+  if(GS.feedback)return;
   GS.feedback=isCorrect?'correct':'wrong';
-  if(isCorrect) GS.score+=10;
+  if(isCorrect)GS.score+=10;
   renderGame();
   clearTimeout(GS.timer);
   GS.timer=setTimeout(()=>{if(!GS.done)nextRound();},1100);
 }
-
-function renderGame() {
+function renderGame(){
   const a=$('gameArea');
-  if(GS.done){ a.innerHTML=renderResult(); return; }
+  if(GS.done){a.innerHTML=renderResult();return;}
   switch(GS.tab){
-    case 'color':     a.innerHTML=renderColorGame(); break;
-    case 'time':      renderTimeGame(a); break;
-    case 'direction': a.innerHTML=renderDirectionGame(); break;
-    case 'classifier':a.innerHTML=renderClassifierGame(); break;
+    case 'color':a.innerHTML=renderColorGame();break;
+    case 'time':renderTimeGame(a);break;
+    case 'direction':a.innerHTML=renderDirectionGame();break;
+    case 'classifier':a.innerHTML=renderClassifierGame();break;
   }
 }
-
-// Color
-function renderColorGame() {
+function renderColorGame(){
   const c=GS.pool[GS.pi];
   if(!GS.current||GS.current.char!==c.char){
     GS.current=c;
@@ -942,60 +964,41 @@ function renderColorGame() {
     GS.options=shuffle([...others,c]);
   }
   const light=['#f1f5f9','#d4b483','#86efac','#93c5fd','#38bdf8'].includes(c.hex);
-  return `
-    <div class="g-hdr"><span class="score-pill">★ ${GS.score}</span><span class="round-pill">${GS.round+1} / ${GAME_TOTAL}</span></div>
-    <p class="g-instr">睇顏色，揀正確嘅廣東話！</p>
-    <div class="color-swatch" style="background:${c.hex};border:${light?'2px solid #d1d5db':'none'}">
-      <span style="font-size:12px;color:${light?'#374151':'rgba(255,255,255,.85)'};font-family:'Noto Sans Thai'">${c.thai}</span>
-    </div>
-    ${renderOpts(GS.options,'color')}
-    ${GS.feedback?renderFb(GS.feedback==='correct','✓ ถูกต้อง!',`✗ ${c.jyutping} · ${c.char}`):''}`;
+  return '<div class="g-hdr"><span class="score-pill">★ '+GS.score+'</span><span class="round-pill">'+(GS.round+1)+' / '+GAME_TOTAL+'</span></div><p class="g-instr">睇顏色，揀正確嘅廣東話！</p><div class="color-swatch" style="background:'+c.hex+';border:'+(light?'2px solid #d1d5db':'none')+'"><span style="font-size:12px;color:'+(light?'#374151':'rgba(255,255,255,.85)')+';font-family:\'Noto Sans Thai\'">'+c.thai+'</span></div>'+renderOpts(GS.options,'color')+(GS.feedback?renderFb(GS.feedback==='correct','✓ ถูกต้อง!','✗ '+c.jyutping+' · '+c.char):'');
 }
-function renderOpts(opts, type) {
-  return `<div class="opts-grid">${opts.map((o,i)=>{
-    let isCorrect=false, key='';
-    if(type==='color'){isCorrect=GS.current&&o.char===GS.current.char;key=o.char;}
-    if(type==='direction'){isCorrect=o===GS.pool[GS.pi].answer;key=o;}
-    if(type==='clf'){isCorrect=o.char===GS.pool[GS.pi].answer;key=o.char;}
+function renderOpts(opts,type){
+  return '<div class="opts-grid">'+opts.map((o,i)=>{
+    let isCorrect=false;
+    if(type==='color')isCorrect=GS.current&&o.char===GS.current.char;
+    if(type==='direction')isCorrect=o===GS.pool[GS.pi].answer;
+    if(type==='clf')isCorrect=o.char===GS.pool[GS.pi].answer;
     const cls='opt-btn'+(GS.feedback&&isCorrect?' ok':GS.feedback&&!isCorrect?' dim':'');
     let inner='';
-    if(type==='color') inner=`<span class="opt-j">${o.jyutping}</span><span class="opt-c">${o.char}</span>`;
-    if(type==='direction') inner=`<span class="opt-j">${DIR_JYUT[o]}</span><span class="opt-c">${o}</span>`;
-    if(type==='clf') inner=`<span class="opt-j">${o.jyutping}</span><span class="opt-c" style="font-size:26px">${o.char}</span>`;
-    const click=!GS.feedback?`onclick="gameAnswer(${i},'${type}')"`:'' ;
-    return `<button class="${cls}" ${click}>${inner}</button>`;
-  }).join('')}</div>`;
+    if(type==='color')inner='<span class="opt-j">'+o.jyutping+'</span><span class="opt-c">'+o.char+'</span>';
+    if(type==='direction')inner='<span class="opt-j">'+DIR_JYUT[o]+'</span><span class="opt-c">'+o+'</span>';
+    if(type==='clf')inner='<span class="opt-j">'+o.jyutping+'</span><span class="opt-c" style="font-size:26px">'+o.char+'</span>';
+    const click=!GS.feedback?'onclick="gameAnswer('+i+',\''+type+'\')"':'';
+    return '<button class="'+cls+'" '+click+'>'+inner+'</button>';
+  }).join('')+'</div>';
 }
-function gameAnswer(i, type) {
-  const opt=GS.options[i];
-  let correct=false;
-  if(type==='color')     correct=opt.char===GS.current.char;
-  if(type==='direction') correct=opt===GS.pool[GS.pi].answer;
-  if(type==='clf')       correct=opt.char===GS.pool[GS.pi].answer;
+function gameAnswer(i,type){
+  const opt=GS.options[i];let correct=false;
+  if(type==='color')correct=opt.char===GS.current.char;
+  if(type==='direction')correct=opt===GS.pool[GS.pi].answer;
+  if(type==='clf')correct=opt.char===GS.pool[GS.pi].answer;
   answerGame(correct);
 }
 window.gameAnswer=gameAnswer;
-
-// Direction
-function renderDirectionGame() {
+function renderDirectionGame(){
   const sc=GS.pool[GS.pi];
   if(!GS.current||GS.current!==sc){
     GS.current=sc;
     const wrongs=DIR_ALL.filter(a=>a!==sc.answer).sort(()=>Math.random()-.5).slice(0,3);
     GS.options=shuffle([...wrongs,sc.answer]);
   }
-  return `
-    <div class="g-hdr"><span class="score-pill">★ ${GS.score}</span><span class="round-pill">${GS.round+1} / ${GAME_TOTAL}</span></div>
-    <div class="dir-card">
-      <div class="dir-scene">${sc.scene}</div>
-      <div class="dir-q">${sc.q}</div>
-    </div>
-    ${renderOpts(GS.options,'direction')}
-    ${GS.feedback?renderFb(GS.feedback==='correct',`✓ ${sc.answer}`,`✗ 係「${sc.answer}」(${DIR_JYUT[sc.answer]})`):''}`;
+  return '<div class="g-hdr"><span class="score-pill">★ '+GS.score+'</span><span class="round-pill">'+(GS.round+1)+' / '+GAME_TOTAL+'</span></div><div class="dir-card"><div class="dir-scene">'+sc.scene+'</div><div class="dir-q">'+sc.q+'</div></div>'+renderOpts(GS.options,'direction')+(GS.feedback?renderFb(GS.feedback==='correct','✓ '+sc.answer,'✗ 係「'+sc.answer+'」('+DIR_JYUT[sc.answer]+')'):'');
 }
-
-// Classifier
-function renderClassifierGame() {
+function renderClassifierGame(){
   const q=GS.pool[GS.pi];
   if(!GS.current||GS.current!==q){
     GS.current=q;
@@ -1005,20 +1008,9 @@ function renderClassifierGame() {
     GS.options=shuffle([...wrongCs,correctC]);
   }
   const ans=S.data.classifier.find(c=>c.char===GS.pool[GS.pi].answer);
-  return `
-    <div class="g-hdr"><span class="score-pill">★ ${GS.score}</span><span class="round-pill">${GS.round+1} / ${GAME_TOTAL}</span></div>
-    <p class="g-instr">揀啱量詞填入空格！</p>
-    <div class="clf-q-card">
-      <div class="clf-q-noun">${q.noun}</div>
-      <div class="clf-q-jyut">${q.jyut_noun}</div>
-      <div class="clf-q-hint">${q.hint}</div>
-    </div>
-    ${renderOpts(GS.options,'clf')}
-    ${GS.feedback?renderFb(GS.feedback==='correct',`✓ ${q.answer} (${ans?.jyutping})`,`✗ 係「${q.answer}」(${ans?.jyutping}) — ${ans?.thai}`):''}`;
+  return '<div class="g-hdr"><span class="score-pill">★ '+GS.score+'</span><span class="round-pill">'+(GS.round+1)+' / '+GAME_TOTAL+'</span></div><p class="g-instr">揀啱量詞填入空格！</p><div class="clf-q-card"><div class="clf-q-noun">'+q.noun+'</div><div class="clf-q-jyut">'+q.jyut_noun+'</div><div class="clf-q-hint">'+q.hint+'</div></div>'+renderOpts(GS.options,'clf')+(GS.feedback?renderFb(GS.feedback==='correct','✓ '+q.answer+' ('+(ans?ans.jyutping:'')+')', '✗ 係「'+q.answer+'」('+(ans?ans.jyutping:'')+') — '+(ans?ans.thai:'')):'');
 }
-
-// Time game
-function renderTimeGame(a) {
+function renderTimeGame(a){
   const HR=['一','二','三','四','五','六','七','八','九','十','十一','十二'];
   const HJ=['jat1','ji6','saam1','sei3','ng5','luk6','cat1','baat3','gau2','sap6','sap6 jat1','sap6 ji6'];
   const ZN=['','一','二','三','四','五','六','七','八','九','十','十一'];
@@ -1027,12 +1019,43 @@ function renderTimeGame(a) {
   const STYLES=['zi','zi','taap','exact','exact'];
   function toCanto(hr,mn,style){
     const hc=HR[hr-1],hj=HJ[hr-1];
-    if(mn===0) return{char:`${hc}點鐘`,jyut:`${hj} dim2 zung1`,display:`${String(hr).padStart(2,'0')}:00`};
-    if(style==='zi'){const z=mn/5;return{char:`${hc}點${ZN[z]}個字`,jyut:`${hj} dim2 ${ZJ[z]} go3 zi6`,display:`${String(hr).padStart(2,'0')}:${String(mn).padStart(2,'0')}`};}
-    if(style==='taap'){const z=mn/5;return{char:`塔${ZN[z]}`,jyut:`taap3 ${ZJ[z]}`,display:`+${mn}分`};}
-    const mStr=mn<10?`零${ZN[mn]}`:mn===30?'三十':mn<20?`一十${ZN[mn%10]}`:`二十${mn>20?ZN[mn-20]:''}`;
-    const mj=mn<10?`ling4 ${ZJ[mn]}`:mn===30?'saam1 sap6':mn<20?`sap6 ${ZJ[mn%10]}`:`ji6 sap6${mn>20?' '+ZJ[mn-20]:''}`;
-    return{char:`${hc}點${mStr}分`,jyut:`${hj} dim2 ${mj.trim()} fan1`,display:`${String(hr).padStart(2,'0')}:${String(mn).padStart(2,'0')}`};
+    if(mn===0)return{char:hc+'點鐘',jyut:hj+' dim2 zung1',display:String(hr).padStart(2,'0')+':00'};
+    if(style==='zi'){const z=mn/5;return{char:hc+'點'+ZN[z]+'個字',jyut:hj+' dim2 '+ZJ[z]+' go3 zi6',display:String(hr).padStart(2,'0')+':'+String(mn).padStart(2,'0')};}
+    if(style==='taap'){const z=mn/5;return{char:'塔'+ZN[z],jyut:'taap3 '+ZJ[z],display:'+'+mn+'分'};}
+    // exact digits: e.g. 4:05 = 四點零五分, 4:20 = 四點二十分, 4:25 = 四點二十五分
+    const DIGIT = ['零','一','二','三','四','五','六','七','八','九'];
+    const DIGIT_J = ['ling4','jat1','ji6','saam1','sei3','ng5','luk6','cat1','baat3','gau2'];
+    let mStr, mj;
+    if (mn < 10) {
+      mStr = '零' + DIGIT[mn];
+      mj = 'ling4 ' + DIGIT_J[mn];
+    } else if (mn === 10) {
+      mStr = '一十'; mj = 'jat1 sap6';
+    } else if (mn < 20) {
+      mStr = '一十' + DIGIT[mn % 10];
+      mj = 'sap6 ' + DIGIT_J[mn % 10];
+    } else if (mn === 20) {
+      mStr = '二十'; mj = 'ji6 sap6';
+    } else if (mn < 30) {
+      mStr = '二十' + DIGIT[mn % 10];
+      mj = 'ji6 sap6 ' + DIGIT_J[mn % 10];
+    } else if (mn === 30) {
+      mStr = '三十'; mj = 'saam1 sap6';
+    } else if (mn < 40) {
+      mStr = '三十' + DIGIT[mn % 10];
+      mj = 'saam1 sap6 ' + DIGIT_J[mn % 10];
+    } else if (mn === 40) {
+      mStr = '四十'; mj = 'sei3 sap6';
+    } else if (mn < 50) {
+      mStr = '四十' + DIGIT[mn % 10];
+      mj = 'sei3 sap6 ' + DIGIT_J[mn % 10];
+    } else if (mn === 50) {
+      mStr = '五十'; mj = 'ng5 sap6';
+    } else {
+      mStr = '五十' + DIGIT[mn % 10];
+      mj = 'ng5 sap6 ' + DIGIT_J[mn % 10];
+    }
+    return{char:hc+'點'+mStr+'分',jyut:hj+' dim2 '+mj+' fan1',display:String(hr).padStart(2,'0')+':'+String(mn).padStart(2,'0')};
   }
   if(!GS.current){
     const hr=Math.floor(Math.random()*12)+1;
@@ -1040,225 +1063,88 @@ function renderTimeGame(a) {
     const style=mn===0?'zi':STYLES[Math.floor(Math.random()*STYLES.length)];
     const correct=toCanto(hr,mn,style);
     const wrongs=[];
-    while(wrongs.length<3){
-      const wh=Math.floor(Math.random()*12)+1, wm=MINS[Math.floor(Math.random()*MINS.length)];
-      const ws=wm===0?'zi':STYLES[Math.floor(Math.random()*STYLES.length)];
-      const w=toCanto(wh,wm,ws);
-      if(w.char!==correct.char&&!wrongs.some(x=>x.char===w.char)) wrongs.push(w);
-    }
-    GS.current={hr,mn,style,correct};
-    GS.options=shuffle([...wrongs,correct]);
+    while(wrongs.length<3){const wh=Math.floor(Math.random()*12)+1,wm=MINS[Math.floor(Math.random()*MINS.length)];const ws=wm===0?'zi':STYLES[Math.floor(Math.random()*STYLES.length)];const w=toCanto(wh,wm,ws);if(w.char!==correct.char&&!wrongs.some(x=>x.char===w.char))wrongs.push(w);}
+    GS.current={hr,mn,style,correct};GS.options=shuffle([...wrongs,correct]);
   }
-  const {correct}=GS.current;
-  a.innerHTML=`
-    <div class="g-hdr"><span class="score-pill">★ ${GS.score}</span><span class="round-pill">${GS.round+1} / ${GAME_TOTAL}</span></div>
-    <p class="g-instr">依家幾多點？廣東話點講？</p>
-    <div class="clock-card">
-      <div class="clock-digits">${correct.display}</div>
-      ${GS.current.style==='taap'?'<div class="clock-sub">從整點起計</div>':''}
-    </div>
-    <div class="opts-grid">${GS.options.map((opt,i)=>{
-      const isOk=GS.feedback&&opt.char===correct.char;
-      const isDim=GS.feedback&&opt.char!==correct.char;
-      const click=!GS.feedback?`onclick="timeAnswer(${i})"`:'' ;
-      return `<button class="opt-btn${isOk?' ok':isDim?' dim':''}" ${click}>
-        <span class="opt-j" style="font-size:10px">${opt.jyut}</span>
-        <span class="opt-c" style="font-size:13px">${opt.char}</span>
-      </button>`;
-    }).join('')}</div>
-    ${GS.feedback?renderFb(GS.feedback==='correct','✓ ถูกต้อง!',`✗ 係「${correct.char}」`):''}`;
+  const{correct}=GS.current;
+  a.innerHTML='<div class="g-hdr"><span class="score-pill">★ '+GS.score+'</span><span class="round-pill">'+(GS.round+1)+' / '+GAME_TOTAL+'</span></div><p class="g-instr">依家幾多點？廣東話點講？</p><div class="clock-card"><div class="clock-digits">'+correct.display+'</div>'+(GS.current.style==='taap'?'<div class="clock-sub">從整點起計</div>':'')+'</div><div class="opts-grid">'+GS.options.map((opt,i)=>{const isOk=GS.feedback&&opt.char===correct.char;const isDim=GS.feedback&&opt.char!==correct.char;const click=!GS.feedback?'onclick="timeAnswer('+i+')"':'';return'<button class="opt-btn'+(isOk?' ok':isDim?' dim':'')+'" '+click+'><span class="opt-j" style="font-size:10px">'+opt.jyut+'</span><span class="opt-c" style="font-size:13px">'+opt.char+'</span></button>';}).join('')+'</div>'+(GS.feedback?renderFb(GS.feedback==='correct','✓ ถูกต้อง!','✗ 係「'+correct.char+'」'):'');
 }
-window.timeAnswer=(i)=>{
-  const opt=GS.options[i];
-  answerGame(opt.char===GS.current.correct.char);
-  if(!GS.done) GS.current=null; // reset for next round
-};
-
-function renderFb(ok,okMsg,errMsg){
-  return `<div class="fb ${ok?'ok':'err'}">${ok?okMsg:errMsg}</div>`;
-}
+window.timeAnswer=i=>{const opt=GS.options[i];answerGame(opt.char===GS.current.correct.char);if(!GS.done)GS.current=null;};
+function renderFb(ok,okMsg,errMsg){return'<div class="fb '+(ok?'ok':'err')+'">'+(ok?okMsg:errMsg)+'</div>';}
 function renderResult(){
   const emojis={color:'🎨',time:'⏰',direction:'🧭',classifier:'🀄'};
   const colors={color:'#dc2626',time:'#2563eb',direction:'#16a34a',classifier:'#9333ea'};
-  return `<div class="result-card">
-    <div class="result-emoji">${emojis[GS.tab]}</div>
-    <div class="result-title">完成！</div>
-    <div class="result-score" style="color:${colors[GS.tab]}">${GS.score} / ${GAME_TOTAL*10}</div>
-    <div class="result-thai">เก่งมาก! 叻仔！</div>
-    <button class="retry-btn" onclick="initGame('${GS.tab}')">再玩一次</button>
-  </div>`;
+  return'<div class="result-card"><div class="result-emoji">'+emojis[GS.tab]+'</div><div class="result-title">完成！</div><div class="result-score" style="color:'+colors[GS.tab]+'">'+GS.score+' / '+(GAME_TOTAL*10)+'</div><div class="result-thai">เก่งมาก! 叻仔！</div><button class="retry-btn" onclick="initGame(\''+GS.tab+'\')">再玩一次</button></div>';
 }
 
 // ── LESSONS ───────────────────────────────────────────────────
-
-// Password unlock system - keys stored in localStorage
-// Format: localStorage key = 'unlocked_' + lesson_id
-// Teacher sets password per lesson in Sheet5 col J (password)
-// Default unlocked lessons: unlocked_by_default === 'TRUE'
-
-function getLessonUnlocked(lessonId, row) {
-  if (row.unlocked_by_default === 'TRUE') return true;
-  return localStorage.getItem('unlocked_' + lessonId) === '1';
+function getLessonUnlocked(lessonId,row){
+  if(row.unlocked_by_default==='TRUE')return true;
+  return localStorage.getItem('unlocked_'+lessonId)==='1';
 }
-
-function buildLessons() {
-  const lessons = S.data.lessons;
-  if (!lessons.length) return;
-
-  // Filter bar: All + unique types
-  const types = ['all', ...new Set(lessons.map(l => l.type))];
-  const typeLabel = { all:'全部', Chapter:'Chapter', Grammar:'Grammar', Extra:'Extra' };
-  const bar = $('lessonFilterBar');
-  let currentFilter = 'all';
-
-  types.forEach(t => {
-    const btn = h('button', 'f-btn' + (t==='all'?' act':''), typeLabel[t]||t);
-    btn.addEventListener('click', () => {
-      currentFilter = t;
-      bar.querySelectorAll('.f-btn').forEach(b => b.classList.remove('act'));
-      btn.classList.add('act');
-      renderLessons(currentFilter);
-    });
+function buildLessons(){
+  const lessons=S.data.lessons;
+  if(!lessons.length)return;
+  const types=['all',...new Set(lessons.map(l=>l.type))];
+  const typeLabel={all:'全部',Chapter:'Chapter',Grammar:'Grammar',Extra:'Extra'};
+  const bar=$('lessonFilterBar');
+  let currentFilter='all';
+  types.forEach(t=>{
+    const btn=h('button','f-btn'+(t==='all'?' act':''),typeLabel[t]||t);
+    btn.addEventListener('click',()=>{currentFilter=t;bar.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('act'));btn.classList.add('act');renderLessons(currentFilter);});
     bar.appendChild(btn);
   });
-
   renderLessons('all');
 }
-
-function renderLessons(filter) {
-  const lessons = S.data.lessons;
-  const filtered = filter === 'all' ? lessons : lessons.filter(l => l.type === filter);
-  const sorted = [...filtered].sort((a,b) => (+a.order||0)-(+b.order||0) || (+a.chapter||0)-(+b.chapter||0));
-
-  // Progress bar
-  const total = lessons.length;
-  const unlocked = lessons.filter(l => getLessonUnlocked(l.lesson_id, l)).length;
-  $('lessonProgress').innerHTML = `
-    <div class="lesson-progress">
-      已解鎖 ${unlocked} / ${total} 個課堂
-      <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${Math.round(unlocked/total*100)}%"></div></div>
-    </div>`;
-
-  $('lessonList').innerHTML = sorted.map(l => {
-    const unlocked = getLessonUnlocked(l.lesson_id, l);
-    const chLabel = l.chapter !== undefined && l.chapter !== '' ? `Ch${String(l.chapter).padStart(2,'0')}` : '';
-    return `
-    <div class="lesson-card" id="lcard-${l.lesson_id}-${l.order}">
-      <div class="lc-header" onclick="toggleLesson('${l.lesson_id}','${l.order}')">
-        <span class="lc-badge ${l.type}">${l.type}</span>
-        ${chLabel ? `<span class="lc-ch">${chLabel}</span>` : ''}
-        <span class="lc-title">${l.title}</span>
-        ${unlocked ? `<span class="lc-chevron" id="chev-${l.lesson_id}-${l.order}">›</span>` : '<span style="font-size:14px">🔒</span>'}
-      </div>
-      <div class="lc-body" id="lbody-${l.lesson_id}-${l.order}">
-        ${unlocked ? renderLessonBody(l) : renderUnlockForm(l)}
-      </div>
-    </div>`;
+function renderLessons(filter){
+  const lessons=S.data.lessons;
+  const filtered=filter==='all'?lessons:lessons.filter(l=>l.type===filter);
+  const sorted=[...filtered].sort((a,b)=>(+a.order||0)-(+b.order||0)||(+a.chapter||0)-(+b.chapter||0));
+  const total=lessons.length;
+  const unlocked=lessons.filter(l=>getLessonUnlocked(l.lesson_id,l)).length;
+  $('lessonProgress').innerHTML='<div class="lesson-progress">已解鎖 '+unlocked+' / '+total+' 個課堂<div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:'+Math.round(unlocked/total*100)+'%"></div></div></div>';
+  $('lessonList').innerHTML=sorted.map(l=>{
+    const un=getLessonUnlocked(l.lesson_id,l);
+    const chLabel=l.chapter!==undefined&&l.chapter!==''?'Ch'+String(l.chapter).padStart(2,'0'):'';
+    return'<div class="lesson-card" id="lcard-'+l.lesson_id+'"><div class="lc-header" onclick="toggleLesson(\''+l.lesson_id+'\')"><span class="lc-badge '+l.type+'">'+l.type+'</span>'+(chLabel?'<span class="lc-ch">'+chLabel+'</span>':'')+'<span class="lc-title">'+l.title+'</span>'+(un?'<span class="lc-chevron" id="chev-'+l.lesson_id+'">›</span>':'<span style="font-size:14px">🔒</span>')+'</div><div class="lc-body" id="lbody-'+l.lesson_id+'">'+(un?renderLessonBody(l):renderUnlockForm(l))+'</div></div>';
   }).join('');
 }
-
-function renderLessonBody(l) {
-  let html = '';
-
-  // SoundCloud first (備課)
-  if (l.soundcloud_url && l.soundcloud_url.trim()) {
-    html += `
-    <div class="lc-section">
-      <div class="lc-label">🎵 備課收聽（先聽再睇片）</div>
-      <a class="media-btn soundcloud" href="${l.soundcloud_url.trim()}" target="_blank" rel="noopener">
-        <span class="icon">☁️</span>
-        <span class="lbl">SoundCloud — ${l.title}</span>
-        <span class="ext">↗</span>
-      </a>
-    </div>`;
+function renderLessonBody(l){
+  let html='';
+  if(l.soundcloud_url&&l.soundcloud_url.trim()){
+    html+='<div class="lc-section"><div class="lc-label">🎵 備課收聽（先聽再睇片）</div><a class="media-btn soundcloud" href="'+l.soundcloud_url.trim()+'" target="_blank" rel="noopener"><span class="icon">☁️</span><span class="lbl">SoundCloud — '+l.title+'</span><span class="ext">↗</span></a></div>';
   }
-
-  // YouTube
-  if (l.youtube_url && l.youtube_url.trim()) {
-    // Handle multiple YouTube links (newline or space separated)
-    const ytLinks = l.youtube_url.trim().split(/[
-\s]+/).filter(u => u.startsWith('http'));
-    html += `
-    <div class="lc-section">
-      <div class="lc-label">▶️ 教學影片</div>
-      ${ytLinks.map((url,i) => `
-      <a class="media-btn youtube" href="${url}" target="_blank" rel="noopener">
-        <span class="icon">▶</span>
-        <span class="lbl">YouTube${ytLinks.length>1?' ('+(i+1)+')':''} — ${l.title}</span>
-        <span class="ext">↗</span>
-      </a>`).join('')}
-    </div>`;
+  if(l.youtube_url&&l.youtube_url.trim()){
+    const ytLinks=l.youtube_url.trim().split(/\s+/).filter(u=>u.startsWith('http'));
+    html+='<div class="lc-section"><div class="lc-label">▶️ 教學影片</div>'+ytLinks.map((url,i)=>'<a class="media-btn youtube" href="'+url+'" target="_blank" rel="noopener"><span class="icon">▶</span><span class="lbl">YouTube'+(ytLinks.length>1?' ('+(i+1)+')':'')+' — '+l.title+'</span><span class="ext">↗</span></a>').join('')+'</div>';
   }
-
-  // Vocab (from Sheet1, matched by lesson_id or chapter)
-  const chNum = l.chapter !== undefined ? String(l.chapter) : '';
-  const vocabForLesson = S.data.vocab.filter(v => {
-    // Match by explicit vocab_ids if set
-    if (l.vocab_ids && l.vocab_ids.trim()) {
-      return l.vocab_ids.split(',').map(s=>s.trim()).includes(v.id);
-    }
-    return false;
-  });
-
-  if (vocabForLesson.length) {
-    html += `
-    <div class="lc-section">
-      <div class="lc-label">📚 本課詞彙</div>
-      <div class="lc-vocab-grid">
-        ${vocabForLesson.map(v => `
-        <div class="lc-vocab-item">
-          <div class="lc-vocab-jyut">${v.jyutping}</div>
-          <div class="lc-vocab-char">${v.char}</div>
-          <div class="lc-vocab-thai">${v.thai}</div>
-        </div>`).join('')}
-      </div>
-    </div>`;
-  }
-
-  return html || '<div style="font-size:13px;color:var(--text-muted)">暫冇額外材料</div>';
+  return html||'<div style="font-size:13px;color:var(--text-muted)">暫冇額外材料</div>';
 }
-
-function renderUnlockForm(l) {
-  return `
-    <div class="locked-overlay">🔒 呢個課堂需要解鎖密碼</div>
-    <div class="unlock-form">
-      <input class="unlock-input" type="password" placeholder="輸入老師俾嘅密碼..." id="pw-${l.lesson_id}-${l.order}">
-      <button class="unlock-btn" onclick="tryUnlock('${l.lesson_id}','${l.order}','${l.password||''}')">解鎖</button>
-    </div>
-    <div class="unlock-err" id="pwerr-${l.lesson_id}-${l.order}"></div>`;
+function renderUnlockForm(l){
+  return'<div class="locked-overlay">🔒 呢個課堂需要解鎖密碼</div><div class="unlock-form"><input class="unlock-input" type="password" placeholder="輸入老師俾嘅密碼..." id="pw-'+l.lesson_id+'"><button class="unlock-btn" onclick="tryUnlock(\''+l.lesson_id+'\',\''+( l.password||'')+'\')">解鎖</button></div><div class="unlock-err" id="pwerr-'+l.lesson_id+'"></div>';
 }
-
-window.toggleLesson = (id, order) => {
-  const body = $(`lbody-${id}-${order}`);
-  const chev = $(`chev-${id}-${order}`);
-  if (!body) return;
-  const isOpen = body.classList.contains('open');
-  // Close all
-  document.querySelectorAll('.lc-body').forEach(b => b.classList.remove('open'));
-  document.querySelectorAll('.lc-chevron').forEach(c => c.classList.remove('open'));
-  // Toggle this one
-  if (!isOpen) {
-    body.classList.add('open');
-    if (chev) chev.classList.add('open');
-  }
+window.toggleLesson=id=>{
+  const body=$('lbody-'+id);const chev=$('chev-'+id);if(!body)return;
+  const isOpen=body.classList.contains('open');
+  document.querySelectorAll('.lc-body').forEach(b=>b.classList.remove('open'));
+  document.querySelectorAll('.lc-chevron').forEach(c=>c.classList.remove('open'));
+  if(!isOpen){body.classList.add('open');if(chev)chev.classList.add('open');}
 };
-
-window.tryUnlock = (id, order, correctPw) => {
-  const input = $(`pw-${id}-${order}`);
-  const errEl = $(`pwerr-${id}-${order}`);
-  if (!input) return;
-  const entered = input.value.trim();
-  // If no password set in sheet, any non-empty input unlocks (teacher mode)
-  const match = correctPw ? entered === correctPw : entered.length > 0;
-  if (match) {
-    localStorage.setItem('unlocked_' + id, '1');
-    renderLessons(document.querySelector('#lessonFilterBar .f-btn.act')?.textContent === '全部' ? 'all' :
-      document.querySelector('#lessonFilterBar .f-btn.act')?.textContent || 'all');
+window.tryUnlock=(id,correctPw)=>{
+  const input=$('pw-'+id);const errEl=$('pwerr-'+id);if(!input)return;
+  // If no password configured in sheet, do not allow unlock via input
+  if(!correctPw||correctPw.trim()===''){
+    if(errEl){errEl.textContent='請聯絡老師取得密碼。';} return;
+  }
+  const entered=input.value.trim();
+  if(entered===correctPw){
+    localStorage.setItem('unlocked_'+id,'1');
+    const activeFilter=document.querySelector('#lessonFilterBar .f-btn.act');
+    renderLessons(activeFilter?activeFilter.textContent:'all');
   } else {
-    if (errEl) { errEl.textContent = '密碼錯誤，請再試。'; setTimeout(()=>{errEl.textContent='';},2000); }
+    if(errEl){errEl.textContent='密碼錯誤，請再試。';setTimeout(()=>{errEl.textContent='';},2000);}
   }
 };
-
 
 // ── START ─────────────────────────────────────────────────────
 loadData();
