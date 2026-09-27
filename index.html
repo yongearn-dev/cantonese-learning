@@ -661,22 +661,21 @@ function h(tag, cls, inner='') {
 // ── INIT ALL ──────────────────────────────────────────────────
 
 const INLINE = {
-  vocab: `id,jyutping,char,thai,english,tone,category
-1,nei5 hou2,你好,สวัสดี,Hello,5-2,greetings
-2,m4 goi1,唔該,ขอบคุณ/ขอโทษ,Thank you / Excuse me,4-1,greetings
-3,do1 ze6,多謝,ขอบคุณมาก,Thank you (gift),1-6,greetings
-4,baai3 baai3,拜拜,ลาก่อน,Goodbye,3-3,greetings
-5,hai6,係,ใช่,Yes / Is,6,basics
-6,m4 hai6,唔係,ไม่ใช่,No / Is not,4-6,basics
-7,hou2,好,ดี,Good,2,basics
-8,m4 hou2,唔好,ไม่ดี,Not good,4-2,basics
-9,ngo5,我,ฉัน/ผม,I / Me,5,pronouns
-10,nei5,你,คุณ,You,5,pronouns
-11,keoi5,佢,เขา/เธอ,He / She,5,pronouns
-12,sik6 fan6,食飯,กินข้าว,Eat a meal,6-6,food
-13,jam2 seoi2,飲水,ดื่มน้ำ,Drink water,2-2,food
-14,hou2 sik6,好食,อร่อย,Delicious,2-6,food
-15,gei2 do1 cin2,幾多錢,เท่าไหร่,How much?,2-1-2,shopping`,
+  vocab: `id,category,jyutping,char,thai,english,tone
+1,Ch01,nei5 hou2,你好,สวัสดี,Hello,5-2
+2,Ch01,m4 goi1,唔該,ขอบคุณ/ขอโทษ,Thank you / Excuse me,4-1
+3,Ch01,do1 ze6,多謝,ขอบคุณมาก,Thank you (gift),1-6
+4,Ch01,baai3 baai3,拜拜,ลาก่อน,Goodbye,3-3
+5,Ch02,hai6,係,ใช่,Yes / Is,6
+6,Ch02,m4 hai6,唔係,ไม่ใช่,No / Is not,4-6
+7,Ch02,hou2,好,ดี,Good,2
+8,Ch02,m4 hou2,唔好,ไม่ดี,Not good,4-2
+9,Ch03,ngo5,我,ฉัน/ผม,I / Me,5
+10,Ch03,nei5,你,คุณ,You,5
+11,Ch03,keoi5,佢,เขา/เธอ,He / She,5
+12,Extra,wan2,搵,หา,,
+13,Extra,fo1 muk6,科目,วิชา,,
+14,Gram,gei2 do1 cin2,幾多錢,เท่าไหร่,How much?,2-1-2`,
 
   dialogue: `dialogue_id,title,titleThai,emoji,category,line_order,speaker,jyutping,cantonese,thai
 1,自我介紹,แนะนำตัว,👋,original,1,A,nei5 hou2! ngo5 giu3 aa3 ming4.,你好！我叫阿明。,สวัสดี! ฉันชื่ออาหมิง
@@ -934,37 +933,163 @@ function buildHome() {
 }
 
 // ── VOCAB ─────────────────────────────────────────────────────
+// 大類別對照表與優先排序
+const MAIN_CAT_LABELS = {
+  ch: '課數 Ch',
+  grammar: 'Grammar',
+  extra: 'Extra',
+  song: '歌曲 Song'
+};
+
 function buildVocab() {
-  const cats=['all',...new Set(S.data.vocab.map(w=>w.category))];
-  const catLabel={all:'全部',greetings:'打招呼',basics:'基礎',pronouns:'代詞',food:'飲食',shopping:'購物'};
-  const bar=$('vocabFilterBar');
-  cats.forEach(c=>{
-    const btn=h('button','f-btn'+(c==='all'?' act':''),catLabel[c]||c);
-    btn.addEventListener('click',()=>{S.vocabCat=c;S.vocabIdx=0;renderVocab();bar.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('act'));btn.classList.add('act');});
-    bar.appendChild(btn);
+  // 1. 設定初始狀態（如果尚未設定）
+  if (!S.vocabMainCat) S.vocabMainCat = 'ch'; // 預設大類別
+  if (!S.vocabSubCat) S.vocabSubCat = 'all';  // 預設小類別
+
+  // 2. 綁定卡片翻轉、切換與語音按鈕事件（只需綁定一次）
+  $('fcPrev').addEventListener('click', () => {
+    const f = filtered();
+    if (f.length === 0) return;
+    S.vocabIdx = (S.vocabIdx - 1 + f.length) % f.length;
+    renderCard();
   });
-  $('fcPrev').addEventListener('click',()=>{const f=filtered();S.vocabIdx=(S.vocabIdx-1+f.length)%f.length;renderCard();});
-  $('fcNext').addEventListener('click',()=>{const f=filtered();S.vocabIdx=(S.vocabIdx+1)%f.length;renderCard();});
-  $('fcWrap').addEventListener('click',()=>$('fcWrap').classList.toggle('flip'));
-  $('fcSpeakBtn').addEventListener('click',e=>{e.stopPropagation();const w=filtered()[S.vocabIdx];if(w)Speech.speak(w.char);});
+
+  $('fcNext').addEventListener('click', () => {
+    const f = filtered();
+    if (f.length === 0) return;
+    S.vocabIdx = (S.vocabIdx + 1) % f.length;
+    renderCard();
+  });
+
+  $('fcWrap').addEventListener('click', () =>$('fcWrap').classList.toggle('flip'));
+
+  $('fcSpeakBtn').addEventListener('click', e => {
+    e.stopPropagation();
+    const w = filtered()[S.vocabIdx];
+    if (w && Speech.supported) Speech.speak(w.char);
+  });
+
+  // 3. 建構第一層（大類別）按鈕列
+  renderMainFilterBar();
+  
+  // 4. 渲染頁面內容
   renderVocab();
 }
-function filtered(){return S.vocabCat==='all'?S.data.vocab:S.data.vocab.filter(w=>w.category===S.vocabCat);}
-function renderVocab(){renderCard();renderVocabList();}
-function renderCard(){
-  const f=filtered(),w=f[S.vocabIdx];if(!w)return;
-  $('fcWrap').classList.remove('flip');
-  $('fcJyut').textContent=w.jyutping;$('fcChar').textContent=w.char;
-  $('fcThai').textContent=w.thai;// english hidden
-  $('fcCharSm').textContent=w.char;$('fcTone').textContent='tone: '+w.tone;
-  $('fcCount').textContent=(S.vocabIdx+1)+' / '+f.length;
-  if(!Speech.supported)$('fcSpeakBtn').style.display='none';
-}
-function renderVocabList(){
-  $('vocabList').innerHTML=filtered().map((w,i)=>'<div class="v-row'+(i===S.vocabIdx?' act':'')+'" onclick="selectVocab('+i+')"><div><div class="v-jyut">'+w.jyutping+'</div><div class="v-char">'+w.char+'</div></div><div class="v-right"><div class="v-thai">'+w.thai+'</div></div></div>').join('');
-}
-window.selectVocab=i=>{S.vocabIdx=i;renderVocab();};
 
+// 渲染第一層：大類別列
+function renderMainFilterBar() {
+  const bar = $('vocabFilterBar'); // 第一層容器
+  if (!bar) return;
+  bar.innerHTML = '';
+
+  // 取得資料中所有的 mainCategory（若資料中只有 category，可自行擴充 mapping）
+  const mainCats = ['ch', 'grammar', 'extra', 'song'];
+
+  mainCats.forEach(mainCat => {
+    const btn = h('button', 'f-btn' + (S.vocabMainCat === mainCat ? ' act' : ''), MAIN_CAT_LABELS[mainCat] || mainCat);
+    btn.addEventListener('click', () => {
+      S.vocabMainCat = mainCat;
+      S.vocabSubCat = 'all'; // 切換大類別時重置小類別為「全部」
+      S.vocabIdx = 0;
+      
+      // 更新大類別 UI
+      bar.querySelectorAll('.f-btn').forEach(b => b.classList.remove('act'));
+      btn.classList.add('act');
+      
+      // 更新小類別選單與單字內容
+      renderSubFilterBar();
+      renderVocab();
+    });
+    bar.appendChild(btn);
+  });
+
+  // 同時渲染第二層
+  renderSubFilterBar();
+}
+
+// 渲染第二層：細分單元列
+function renderSubFilterBar() {
+  const subBar = $('vocabSubFilterBar'); // 需要在 HTML 中準備一個第二層的容器
+  if (!subBar) return;
+  subBar.innerHTML = '';
+
+  // 根據目前選中的大類別，篩選出對應的所有小單元/子類別
+  const mainFiltered = S.data.vocab.filter(w => w.mainCategory === S.vocabMainCat);
+  const subCats = ['all', ...new Set(mainFiltered.map(w => w.subCategory || w.category))];
+
+  subCats.forEach(subCat => {
+    const label = subCat === 'all' ? '全部' : subCat;
+    const btn = h('button', 'f-sub-btn' + (S.vocabSubCat === subCat ? ' act' : ''), label);
+    btn.addEventListener('click', () => {
+      S.vocabSubCat = subCat;
+      S.vocabIdx = 0;
+      
+      subBar.querySelectorAll('.f-sub-btn').forEach(b => b.classList.remove('act'));
+      btn.classList.add('act');
+      
+      renderVocab();
+    });
+    subBar.appendChild(btn);
+  });
+}
+
+// 根據大類別 + 細分單元雙重篩選
+function filtered() {
+  return S.data.vocab.filter(w => {
+    const matchMain = w.mainCategory ? (w.mainCategory === S.vocabMainCat) : true;
+    const subVal = w.subCategory || w.category;
+    const matchSub = S.vocabSubCat === 'all' || subVal === S.vocabSubCat;
+    return matchMain && matchSub;
+  });
+}
+
+function renderVocab() {
+  renderCard();
+  renderVocabList();
+}
+
+function renderCard() {
+  const f = filtered();
+  const w = f[S.vocabIdx];
+
+  $('fcWrap').classList.remove('flip');
+
+  if (!w) {
+    $('fcJyut').textContent = '';$('fcChar').textContent = '-';
+    $('fcThai').textContent = '';$('fcCharSm').textContent = '-';
+    $('fcTone').textContent = '';$('fcCount').textContent = '0 / 0';
+    return;
+  }
+
+  $('fcJyut').textContent = w.jyutping;
+  $('fcChar').textContent = w.char;
+  $('fcThai').textContent = w.thai;
+  $('fcCharSm').textContent = w.char;
+  $('fcTone').textContent = 'tone: ' + w.tone;
+  $('fcCount').textContent = (S.vocabIdx + 1) + ' / ' + f.length;
+
+  if (!Speech.supported) $('fcSpeakBtn').style.display = 'none';
+}
+
+function renderVocabList() {
+  $('vocabList').innerHTML = filtered().map((w, i) => 
+    `<div class="v-row${i === S.vocabIdx ? ' act' : ''}" onclick="selectVocab(${i})">
+      <div>
+        <div class="v-jyut">${w.jyutping}</div>
+        <div class="v-char">${w.char}</div>
+      </div>
+      <div class="v-right">
+        <div class="v-thai">${w.thai}</div>
+      </div>
+    </div>`
+  ).join('');
+}
+
+window.selectVocab = i => {
+  S.vocabIdx = i;
+  renderVocab();
+};
+  
 // ── SENTENCE STRUCTURE ────────────────────────────────────────
 function buildSentence(){
   const rows=S.data.sentence;
