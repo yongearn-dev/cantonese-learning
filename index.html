@@ -32,6 +32,11 @@
 }
 body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto Sans Thai',sans-serif;font-size:15px;line-height:1.6;-webkit-text-size-adjust:100%}
 .app{min-height:100vh;max-width:480px;margin:0 auto;display:flex;flex-direction:column;background:var(--bg)}
+@media (min-width:640px){
+  body{background:var(--surface2)}
+  .app{max-width:640px;min-height:calc(100vh - 48px);margin:24px auto;border-radius:20px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.14)}
+  .hdr{border-radius:20px 20px 0 0}
+}
 
 /* ── HEADER ── */
 .hdr{background:var(--accent);border-bottom:3px solid var(--yellow);padding:14px 16px 0;position:sticky;top:0;z-index:100}
@@ -80,6 +85,12 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
 .nav-title{font-weight:700;font-size:14px}
 .nav-sub{font-size:12px;color:var(--text-sub)}
 .nav-arrow{color:var(--text-muted);font-size:18px}
+
+/* ── SYNC STATUS ── */
+.sync-status{font-size:12px;padding:8px 12px;border-radius:10px;margin-bottom:12px;cursor:pointer;display:flex;align-items:center;gap:6px;justify-content:space-between}
+.sync-status.ok{background:var(--green-bg);color:var(--green)}
+.sync-status.fail{background:var(--red-bg);color:var(--red)}
+.sync-status .refresh-hint{font-size:11px;opacity:.75;white-space:nowrap}
 
 /* ── AI CHAT ── */
 .ai-login-box{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:34px 20px;text-align:center;box-shadow:var(--shadow)}
@@ -349,6 +360,8 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
 
 <!-- CONTENT -->
 <div class="content">
+
+  <div id="syncStatus" class="sync-status" style="display:none" onclick="manualRefreshSheets()"></div>
 
   <!-- LOADING -->
   <div id="loadingScreen" class="loading-screen">
@@ -750,18 +763,18 @@ const INLINE = {
 4,疑問句式,ประโยคคำถาม,你食咗飯未呀？,nei5 sik6 zo2 faan6 mei6 aa3?,คุณกินข้าวหรือยัง?,5,未,mei6,疑問,คำถาม,#ea580c
 4,疑問句式,ประโยคคำถาม,你食咗飯未呀？,nei5 sik6 zo2 faan6 mei6 aa3?,คุณกินข้าวหรือยัง?,6,呀,aa3,語氣詞,คำเน้น,#6b7280`,
 
-  lessons: `lesson_id,type,chapter,title,soundcloud_url,youtube_url,vocab_ids,order,unlocked_by_default
-ch00_jyutping,Chapter,0,Jyutping,,https://youtu.be/HNAF8k69COo,,1,TRUE
-ch00_tones,Chapter,0,Tone Rules,,https://youtu.be/fmqHaywHB4Q,,1,TRUE
-ch00_pos,Chapter,0,Part of Speech,,https://youtu.be/8O9naHnUX0Q,,1,TRUE
-ch01,Chapter,1,ngo5 hai6... 我係...,https://on.soundcloud.com/SYKe7UKWQsdnlrnhYn,https://youtu.be/5SLLIBbaVq4,,1,TRUE
-extra01,Extra,1,Housework,,https://youtu.be/QmikHwvngEM,,2,FALSE
-grammar01,Grammar,1,(num) (class) (n),,https://youtu.be/624IrnIIFEw,,3,FALSE
-ch02,Chapter,2,lei1 dou6 呢度 go2 gou6 嗰度,https://on.soundcloud.com/pCYvoHCJuE0TJ7Mb2m,https://youtu.be/BcUzgIzc6VU,,4,FALSE
-ch03,Chapter,3,nei5 hou2! 你好！,https://on.soundcloud.com/F67LN3ylkSr43m5p3V,https://youtu.be/EppwYVxuRnw,,5,FALSE
-grammar02,Grammar,2,hou2(adj) 好(adj),,https://youtu.be/OKL1ET6tE9s,,6,FALSE
-grammar03,Grammar,3,bin2 dou6? 邊度？,,https://youtu.be/jFmGBW-9zes,,7,FALSE
-grammar04,Grammar,4,gei2 do1(class)? 幾多(class)?,,https://youtu.be/6czCuHYHDrE,,8,FALSE`
+  lessons: `lesson_id,type,chapter,title,soundcloud_url,youtube_url,vocab_ids,order,unlocked_by_default,password
+ch00_jyutping,Chapter,0,Jyutping,,https://youtu.be/HNAF8k69COo,,1,TRUE,
+ch00_tones,Chapter,0,Tone Rules,,https://youtu.be/fmqHaywHB4Q,,1,TRUE,
+ch00_pos,Chapter,0,Part of Speech,,https://youtu.be/8O9naHnUX0Q,,1,TRUE,
+ch01,Chapter,1,ngo5 hai6... 我係...,https://on.soundcloud.com/SYKe7UKWQsdnlrnhYn,https://youtu.be/5SLLIBbaVq4,,1,TRUE,
+extra01,Extra,1,Housework,,https://youtu.be/QmikHwvngEM,,2,FALSE,
+grammar01,Grammar,1,(num) (class) (n),,https://youtu.be/624IrnIIFEw,,3,FALSE,
+ch02,Chapter,2,lei1 dou6 呢度 go2 gou6 嗰度,https://on.soundcloud.com/pCYvoHCJuE0TJ7Mb2m,https://youtu.be/BcUzgIzc6VU,,4,FALSE,
+ch03,Chapter,3,nei5 hou2! 你好！,https://on.soundcloud.com/F67LN3ylkSr43m5p3V,https://youtu.be/EppwYVxuRnw,,5,FALSE,
+grammar02,Grammar,2,hou2(adj) 好(adj),,https://youtu.be/OKL1ET6tE9s,,6,FALSE,
+grammar03,Grammar,3,bin2 dou6? 邊度？,,https://youtu.be/jFmGBW-9zes,,7,FALSE,
+grammar04,Grammar,4,gei2 do1(class)? 幾多(class)?,,https://youtu.be/6czCuHYHDrE,,8,FALSE,`
 };
 
 // ── AI Chat config: 填返你自己嘅 backend 網址同 Google Client ID ──
@@ -795,6 +808,7 @@ function loadData() {
   S.data.classifier = parseCSV(INLINE.classifier);
   S.data.sentence   = parseCSV(INLINE.sentence);
   S.data.lessons    = parseCSV(INLINE.lessons);
+  S.sourceStatus = { vocab:'fallback', dialogue:'fallback', classifier:'fallback', sentence:'fallback', lessons:'fallback' };
 
   S.data.vocab.forEach(w => {
     if (w.tone && w.tone.includes('/')) w.tone = w.tone.split('/').pop().trim();
@@ -808,7 +822,31 @@ function loadData() {
   refreshFromSheets();
 }
 
+window.manualRefreshSheets = function(){
+  renderSyncStatus(true);
+  refreshFromSheets();
+};
+
+function renderSyncStatus(loading){
+  const el = $('syncStatus');
+  if (!el) return;
+  const allLive = Object.values(S.sourceStatus).every(v => v === 'live');
+  const failedList = Object.entries(S.sourceStatus).filter(([k,v]) => v === 'fallback').map(([k]) => k);
+  el.style.display = 'flex';
+  if (loading) {
+    el.className = 'sync-status ok';
+    el.innerHTML = '<span>🔄 讀緊 Google Sheet 最新資料…</span>';
+  } else if (allLive) {
+    el.className = 'sync-status ok';
+    el.innerHTML = '<span>✅ 資料已連接 Google Sheet（即時）</span><span class="refresh-hint">撳一下重新整理</span>';
+  } else {
+    el.className = 'sync-status fail';
+    el.innerHTML = '<span>⚠️ 讀取唔到：'+failedList.join('、')+'（用緊備用資料，可能過時）</span><span class="refresh-hint">撳一下重試</span>';
+  }
+}
+
 async function refreshFromSheets() {
+  renderSyncStatus(true);
   try {
     const results = await Promise.allSettled([
       tryFetchSheet('vocab',      SHEET_URLS.vocab),
@@ -819,11 +857,12 @@ async function refreshFromSheets() {
     ]);
     const [v,d,c,s,l] = results.map(r => r.status === 'fulfilled' ? r.value : null);
     let updated = false;
-    if (v) { S.data.vocab      = v; updated = true; }
-    if (d) { S.data.dialogue   = d; updated = true; }
-    if (c) { S.data.classifier = c; updated = true; }
-    if (s) { S.data.sentence   = s; updated = true; }
-    if (l) { S.data.lessons    = l; updated = true; }
+    if (v) { S.data.vocab      = v; updated = true; S.sourceStatus.vocab = 'live'; } else { S.sourceStatus.vocab = 'fallback'; }
+    if (d) { S.data.dialogue   = d; updated = true; S.sourceStatus.dialogue = 'live'; } else { S.sourceStatus.dialogue = 'fallback'; }
+    if (c) { S.data.classifier = c; updated = true; S.sourceStatus.classifier = 'live'; } else { S.sourceStatus.classifier = 'fallback'; }
+    if (s) { S.data.sentence   = s; updated = true; S.sourceStatus.sentence = 'live'; } else { S.sourceStatus.sentence = 'fallback'; }
+    if (l) { S.data.lessons    = l; updated = true; S.sourceStatus.lessons = 'live'; } else { S.sourceStatus.lessons = 'fallback'; }
+    renderSyncStatus(false);
     if (updated) {
       S.data.vocab.forEach(w => {
         if (w.tone && w.tone.includes('/')) w.tone = w.tone.split('/').pop().trim();
@@ -838,6 +877,7 @@ async function refreshFromSheets() {
     }
   } catch(e) {
     console.warn('[Sheets] Background refresh failed:', e.message);
+    renderSyncStatus(false);
   }
 }
 
@@ -2152,7 +2192,7 @@ function renderLessonBody(l){
   return html||'<div style="font-size:13px;color:var(--text-muted)">暫冇額外材料</div>';
 }
 function renderUnlockForm(l){
-  return'<div class="locked-overlay">🔒 呢個課堂需要解鎖密碼</div><div class="unlock-form"><input class="unlock-input" type="password" placeholder="輸入老師俾嘅密碼..." id="pw-'+l.lesson_id+'"><button class="unlock-btn" onclick="tryUnlock(\''+l.lesson_id+'\',\''+( l.password||'')+'\')">解鎖</button></div><div class="unlock-err" id="pwerr-'+l.lesson_id+'"></div>';
+  return'<div class="locked-overlay">🔒 呢個課堂需要解鎖密碼</div><div class="unlock-form"><input class="unlock-input" type="password" placeholder="輸入老師俾嘅密碼..." id="pw-'+l.lesson_id+'" onkeydown="if(event.key===\'Enter\')tryUnlock(\''+l.lesson_id+'\')"><button class="unlock-btn" onclick="tryUnlock(\''+l.lesson_id+'\')">解鎖</button></div><div class="unlock-err" id="pwerr-'+l.lesson_id+'"></div>';
 }
 window.toggleLesson=id=>{
   const body=$('lbody-'+id);const chev=$('chev-'+id);if(!body)return;
@@ -2161,11 +2201,17 @@ window.toggleLesson=id=>{
   document.querySelectorAll('.lc-chevron').forEach(c=>c.classList.remove('open'));
   if(!isOpen){body.classList.add('open');if(chev)chev.classList.add('open');}
 };
-window.tryUnlock=(id,correctPw)=>{
+window.tryUnlock=(id)=>{
   const input=$('pw-'+id);const errEl=$('pwerr-'+id);if(!input)return;
-  // If no password configured in sheet, do not allow unlock via input
-  if(!correctPw||correctPw.trim()===''){
-    if(errEl){errEl.textContent='請聯絡老師取得密碼。';} return;
+  const lesson=S.data.lessons.find(l=>l.lesson_id===id);
+  const correctPw=lesson&&lesson.password?String(lesson.password).trim():'';
+  if(!correctPw){
+    if(errEl){
+      errEl.textContent = S.sourceStatus.lessons==='fallback'
+        ? '暫時連唔到 Google Sheet，攞唔到最新密碼設定，請檢查網絡再試（或撳下面嘅同步提示重試）。'
+        : '請聯絡老師取得密碼。';
+    }
+    return;
   }
   const entered=input.value.trim();
   if(entered===correctPw){
