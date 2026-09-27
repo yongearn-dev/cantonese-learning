@@ -6,6 +6,7 @@
 <title>學廣東話 · เรียนกวางตุ้ง</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Sans+Thai:wght@400;600;700&family=Space+Mono:wght@400;700&family=Nunito:wght@800;900&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -79,6 +80,24 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
 .nav-title{font-weight:700;font-size:14px}
 .nav-sub{font-size:12px;color:var(--text-sub)}
 .nav-arrow{color:var(--text-muted);font-size:18px}
+
+/* ── AI CHAT ── */
+.ai-login-box{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:34px 20px;text-align:center;box-shadow:var(--shadow)}
+.ai-chat-box{display:flex;flex-direction:column;height:calc(100vh - 210px);min-height:360px}
+.ai-userbar{display:flex;align-items:center;gap:10px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:8px 12px;margin-bottom:10px;box-shadow:var(--shadow)}
+.ai-avatar{width:30px;height:30px;border-radius:50%;background:var(--accent-bg)}
+.ai-logout-btn{background:transparent;border:1.5px solid var(--border);color:var(--text-sub);font-size:12px;padding:5px 10px;border-radius:20px;cursor:pointer;font-family:inherit}
+.ai-messages{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:4px 2px 10px}
+.ai-msg{max-width:80%;padding:9px 13px;border-radius:14px;font-size:14px;line-height:1.5;animation:resultIn .25s ease}
+.ai-msg.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+.ai-msg.bot{align-self:flex-start;background:var(--surface);border:1.5px solid var(--border);border-bottom-left-radius:4px}
+.ai-msg.bot.pending{color:var(--text-muted);font-style:italic}
+.ai-error{background:var(--red-bg);color:var(--red);border:1px solid #f0c4b8;border-radius:10px;padding:8px 12px;font-size:12px;margin-bottom:8px}
+.ai-input-row{display:flex;gap:8px;padding-top:6px;border-top:1.5px solid var(--border)}
+.ai-input-row input{flex:1;border:1.5px solid var(--border);border-radius:20px;padding:10px 16px;font-size:14px;font-family:inherit;background:var(--surface);color:var(--text)}
+.ai-input-row input:focus{outline:none;border-color:var(--accent)}
+.ai-input-row button{background:var(--accent);color:#fff;border:none;border-radius:20px;padding:0 18px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit}
+.ai-input-row button:disabled{opacity:.5;cursor:default}
 
 /* ── FILTER BAR ── */
 .filter-bar{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:14px;padding-bottom:2px}
@@ -324,6 +343,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
     <button class="tab-btn" data-tab="dialogue">💬 對話</button>
     <button class="tab-btn" data-tab="lessons">📖 課堂</button>
     <button class="tab-btn" data-tab="game">🎮 遊戲</button>
+    <button class="tab-btn" data-tab="ai">🤖 AI對話</button>
   </div>
 </div>
 
@@ -429,6 +449,32 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
     </div>
     <div id="gameArea"></div>
     <div id="scoreHistory" style="margin-top:20px;width:100%"></div>
+  </div>
+
+  <!-- AI CHAT -->
+  <div class="page" id="page-ai">
+    <div class="sec">🤖 AI 對話練習</div>
+    <div id="aiLoginBox" class="ai-login-box">
+      <div style="font-size:34px;margin-bottom:8px">🔐</div>
+      <p style="font-size:13px;color:var(--text-sub);margin-bottom:14px">請用 Google 帳戶登入先可以同 AI 練習對話<br><span style="font-family:'Noto Sans Thai';font-size:12px">กรุณาเข้าสู่ระบบด้วย Google ก่อนเริ่มสนทนากับ AI</span></p>
+      <div id="gSignInBtn"></div>
+    </div>
+    <div id="aiChatBox" class="ai-chat-box" style="display:none">
+      <div class="ai-userbar">
+        <img id="aiAvatar" class="ai-avatar" src="" alt="">
+        <div style="flex:1">
+          <div id="aiUserName" style="font-weight:700;font-size:13px"></div>
+          <div id="aiUsage" style="font-size:11px;color:var(--text-sub)"></div>
+        </div>
+        <button class="ai-logout-btn" onclick="aiSignOut()">登出</button>
+      </div>
+      <div id="aiMessages" class="ai-messages"></div>
+      <div id="aiError" class="ai-error" style="display:none"></div>
+      <div class="ai-input-row">
+        <input id="aiInput" type="text" placeholder="打廣東話或者泰文都得…" onkeydown="if(event.key==='Enter')sendAiMessage()">
+        <button id="aiSendBtn" onclick="sendAiMessage()">送出</button>
+      </div>
+    </div>
   </div>
 
 </div><!-- /content -->
@@ -718,6 +764,12 @@ grammar03,Grammar,3,bin2 dou6? 邊度？,,https://youtu.be/jFmGBW-9zes,,7,FALSE
 grammar04,Grammar,4,gei2 do1(class)? 幾多(class)?,,https://youtu.be/6czCuHYHDrE,,8,FALSE`
 };
 
+// ── AI Chat config: 填返你自己嘅 backend 網址同 Google Client ID ──
+const AI_CONFIG = {
+  BACKEND_URL: 'http://localhost:3000',   // 部署好之後改做正式網址，例如 https://your-backend.onrender.com
+  GOOGLE_CLIENT_ID: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
+};
+
 // ── Google Sheets URLs (primary source) ──────────────────────
 
 const SHEET_URLS = {
@@ -801,6 +853,7 @@ function initAll() {
     buildGame();
     buildLessons();
     setupTabs();
+    initAiChat();
     showPage('home');
     Speech.init();
     if (!Speech.supported) $('noSpeechNote').style.display='block';
@@ -825,6 +878,7 @@ function showTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('act', b.dataset.tab===tab));
   showPage(tab);
   if (tab !== 'dialogue') stopAutoPlay();
+  if (tab === 'ai') renderAiUI();
 }
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('act'));
@@ -2140,6 +2194,140 @@ async function tryFetchSheet(name, url) {
     console.warn('[Sheet FAIL]', name, e.message);
     return null;
   }
+}
+
+// ── AI CHAT (Google Sign-In + backend Gemini proxy) ─────────────
+const AiS = { token:null, user:null, history:[], sending:false };
+
+function parseJwt(token){
+  try{
+    const base64 = token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+    return JSON.parse(decodeURIComponent(atob(base64).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join('')));
+  }catch(e){ return null; }
+}
+
+function initAiChat(){
+  // 試下攞返上次登入嘅 token（未過期就直接用，過期就要求重新登入）
+  const saved = localStorage.getItem('ai_id_token');
+  if (saved) {
+    const payload = parseJwt(saved);
+    if (payload && payload.exp*1000 > Date.now()) {
+      AiS.token = saved; AiS.user = payload;
+    } else {
+      localStorage.removeItem('ai_id_token');
+    }
+  }
+  if (!AI_CONFIG.GOOGLE_CLIENT_ID || AI_CONFIG.GOOGLE_CLIENT_ID.indexOf('YOUR_GOOGLE_CLIENT_ID') === 0) {
+    showAiSetupNotice('未設定 GOOGLE_CLIENT_ID：請去 script 頭段搵 AI_CONFIG，填返你自己個 Google OAuth Client ID。');
+    return;
+  }
+  // accounts.google.com 個 script 係 async 載入，未必即刻有 → 輪詢等佢載完先 init，
+  // 唔係就成個登入掣冇機會顯示出嚟
+  let tries = 0;
+  const poll = setInterval(function(){
+    tries++;
+    if (window.google && google.accounts && google.accounts.id) {
+      clearInterval(poll);
+      google.accounts.id.initialize({
+        client_id: AI_CONFIG.GOOGLE_CLIENT_ID,
+        callback: onGoogleSignIn,
+      });
+      const btn = $('gSignInBtn');
+      if (btn) google.accounts.id.renderButton(btn, { theme:'outline', size:'large', shape:'pill' });
+    } else if (tries > 25) { // 等咗約 5 秒都未載到
+      clearInterval(poll);
+      showAiSetupNotice('Google 登入元件載入唔到。最常見原因：呢個檔案係用 file:// 直接打開（Google 登入需要用 http(s) 網址，唔可以直接開個 HTML 檔），或者網絡連唔到 accounts.google.com。請用返本機伺服器（例如 npx serve 或者 python -m http.server）打開，先再試多次。');
+    }
+  }, 200);
+}
+function showAiSetupNotice(msg){
+  const box = $('gSignInBtn');
+  if (box) box.innerHTML = '<div style="font-size:12px;color:var(--red);background:var(--red-bg);border:1px solid #f0c4b8;border-radius:10px;padding:10px 12px;text-align:left">⚠️ '+msg+'</div>';
+}
+function onGoogleSignIn(response){
+  AiS.token = response.credential;
+  AiS.user = parseJwt(response.credential);
+  localStorage.setItem('ai_id_token', response.credential);
+  renderAiUI();
+}
+function aiSignOut(){
+  AiS.token = null; AiS.user = null; AiS.history = [];
+  localStorage.removeItem('ai_id_token');
+  if (window.google && google.accounts) google.accounts.id.disableAutoSelect();
+  renderAiUI();
+}
+function renderAiUI(){
+  const loggedIn = !!AiS.token;
+  $('aiLoginBox').style.display = loggedIn ? 'none' : 'block';
+  $('aiChatBox').style.display = loggedIn ? 'flex' : 'none';
+  if (!loggedIn) return;
+  $('aiAvatar').src = AiS.user.picture || '';
+  $('aiUserName').textContent = AiS.user.name || AiS.user.email || '';
+  if (AiS.history.length === 0) {
+    $('aiMessages').innerHTML = '<div class="ai-msg bot">你好！想同我練習廣東話定係想問啲咩？隨便打嚟傾下啦！</div>';
+  }
+}
+function addAiMsg(role, text, pending){
+  const wrap = $('aiMessages');
+  const div = document.createElement('div');
+  div.className = 'ai-msg ' + role + (pending ? ' pending' : '');
+  div.textContent = text;
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+  return div;
+}
+async function sendAiMessage(){
+  if (AiS.sending) return;
+  const input = $('aiInput');
+  const message = input.value.trim();
+  if (!message) return;
+  input.value = '';
+  $('aiError').style.display = 'none';
+
+  addAiMsg('user', message);
+  const pendingEl = addAiMsg('bot', '打緊字…', true);
+  AiS.sending = true;
+  $('aiSendBtn').disabled = true;
+
+  try {
+    const res = await fetch(AI_CONFIG.BACKEND_URL + '/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+AiS.token },
+      body: JSON.stringify({ message, history: AiS.history }),
+    });
+    const data = await res.json();
+
+    if (res.status === 401) {
+      pendingEl.remove();
+      aiSignOut();
+      showAiError('登入已過期，請重新登入。');
+      return;
+    }
+    if (!res.ok) {
+      pendingEl.remove();
+      showAiError(data.error || 'AI 服務暫時出錯，請稍後再試。');
+      return;
+    }
+
+    pendingEl.classList.remove('pending');
+    pendingEl.textContent = data.reply;
+    AiS.history.push({ role:'user', parts:[{ text: message }] });
+    AiS.history.push({ role:'model', parts:[{ text: data.reply }] });
+    if (typeof data.usedToday === 'number') {
+      $('aiUsage').textContent = '今日已用 ' + data.usedToday + ' / ' + data.dailyLimit;
+    }
+  } catch(e) {
+    pendingEl.remove();
+    showAiError('連唔到 AI 服務，請檢查網絡或者稍後再試。（' + e.message + '）');
+  } finally {
+    AiS.sending = false;
+    $('aiSendBtn').disabled = false;
+  }
+}
+function showAiError(msg){
+  const box = $('aiError');
+  box.textContent = '⚠️ ' + msg;
+  box.style.display = 'block';
 }
 </script>
 </body>
