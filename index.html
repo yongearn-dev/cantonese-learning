@@ -2258,9 +2258,6 @@ window.tryUnlock=(id)=>{
   }
 };
 
-// ── START ─────────────────────────────────────────────────────
-loadData();
-
 async function tryFetchSheet(name, url) {
   try {
     const r = await fetch(url);
@@ -2410,6 +2407,11 @@ function showAiError(msg){
   box.textContent = '⚠️ ' + msg;
   box.style.display = 'block';
 }
+
+// ── START ─────────────────────────────────────────────────────
+// (呢句要留喺成個 script 最尾，等所有 const/function 定義晒先執行，
+//  唔係好似之前咁因為 AiS 未 declare 就撞 TDZ 錯誤)
+loadData();
 </script>
 </body>
 </html>
