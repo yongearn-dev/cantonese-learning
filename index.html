@@ -2,7 +2,7 @@
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>學廣東話 · เรียนกวางตุ้ง</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Sans+Thai:wght@400;600;700&family=Space+Mono:wght@400;700&family=Nunito:wght@800;900&display=swap" rel="stylesheet">
@@ -32,11 +32,7 @@
 }
 body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto Sans Thai',sans-serif;font-size:15px;line-height:1.6;-webkit-text-size-adjust:100%}
 .app{min-height:100vh;max-width:480px;margin:0 auto;display:flex;flex-direction:column;background:var(--bg)}
-@media (min-width:640px){
-  body{background:var(--surface2)}
-  .app{max-width:640px;min-height:calc(100vh - 48px);margin:24px auto;border-radius:20px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.14)}
-  .hdr{border-radius:20px 20px 0 0}
-}
+/* 版面斷點：手機(預設) → 平板(≥720px) → 電腦(≥1100px)，詳見檔尾 RESPONSIVE 區 */
 
 /* ── HEADER ── */
 .hdr{background:var(--accent);border-bottom:3px solid var(--yellow);padding:14px 16px 0;position:sticky;top:0;z-index:100}
@@ -334,6 +330,79 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
 .lesson-progress{font-size:12px;color:var(--text-sub);margin-bottom:14px}
 .progress-bar-wrap{background:var(--surface2);border-radius:20px;height:6px;margin-top:4px;overflow:hidden}
 .progress-bar-fill{background:linear-gradient(90deg,var(--accent),var(--yellow));height:6px;border-radius:20px;transition:width .4s}
+
+/* ══════════════ RESPONSIVE ══════════════ */
+/* 平板／細視窗：置中「卡片」，闊啲，內容分多欄 */
+@media (min-width:720px){
+  body{background:var(--surface2)}
+  .app{max-width:860px;min-height:calc(100vh - 48px);margin:24px auto;border-radius:20px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.14)}
+  .hdr{border-radius:20px 20px 0 0;padding:16px 24px 0}
+  .tab-bar{margin:0 -24px;padding:0 24px}
+  .tab-btn{padding:10px 16px;font-size:14px}
+  .content{padding:24px 28px 56px}
+  .tone-grid{grid-template-columns:repeat(6,1fr)}
+  #navCards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+  #navCards .nav-card{margin-bottom:0}
+  .vocab-list{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+  .vocab-list .v-unit-label{grid-column:1/-1}
+  .clf-grid{grid-template-columns:repeat(3,1fr)}
+  .lc-vocab-grid{grid-template-columns:repeat(3,1fr)}
+  .fc-wrap{max-width:520px;height:250px;margin-left:auto;margin-right:auto}
+  .fc-char{font-size:54px}
+  .fc-nav{margin-bottom:18px}
+  #page-game,#page-ai{max-width:680px;margin-left:auto;margin-right:auto}
+  .ai-msg{max-width:72%}
+  .dl-canto{font-size:16px}
+}
+
+/* 電腦：左邊固定側欄（logo＋分頁），右邊大面積內容區 */
+@media (min-width:1100px){
+  body{font-size:16px}
+  .app{
+    max-width:1280px;margin:24px auto;min-height:calc(100vh - 48px);
+    display:grid;grid-template-columns:250px minmax(0,1fr);gap:20px;align-items:start;
+    background:transparent;box-shadow:none;border-radius:0;overflow:visible;
+  }
+  .hdr{
+    position:sticky;top:24px;z-index:100;
+    border:none;border-radius:20px;padding:24px 16px 16px;
+    box-shadow:0 12px 40px rgba(0,0,0,.14);
+  }
+  .hdr-top{flex-direction:column;align-items:flex-start;gap:14px;margin-bottom:18px}
+  .logo{font-size:24px}
+  .logo-sub{font-size:12px}
+  .tab-bar{flex-direction:column;gap:4px;margin:0;padding:0;overflow:visible}
+  .tab-btn{
+    text-align:left;padding:11px 14px;font-size:15px;border-bottom:none;border-radius:10px;
+  }
+  .tab-btn:hover{background:rgba(255,255,255,.10);color:#fff}
+  .tab-btn.act{background:rgba(255,255,255,.18);box-shadow:inset 3px 0 0 #F4D58D}
+  .content{
+    background:var(--bg);border-radius:20px;box-shadow:0 12px 40px rgba(0,0,0,.14);
+    min-height:calc(100vh - 48px);padding:32px 40px 56px;
+  }
+  .sec{font-size:17px}
+  .hero{padding:34px 28px}
+  .hero-title{font-size:28px}
+  #navCards{grid-template-columns:repeat(3,1fr)}
+  .vocab-list{grid-template-columns:repeat(3,1fr)}
+  .clf-grid{grid-template-columns:repeat(4,1fr)}
+  #lessonList{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;align-items:start}
+  #lessonList .lesson-card{margin-bottom:0}
+  .fc-wrap{max-width:600px;height:280px}
+  .fc-char{font-size:64px}
+  .dl-lines,.dl-header,#ssContent{max-width:820px}
+  .ai-chat-box{height:calc(100vh - 210px);min-height:440px}
+  .ai-msg{font-size:15px}
+  #page-game,#page-ai{max-width:760px}
+}
+
+/* 大電腦／寬屏：字體同間距再鬆啲 */
+@media (min-width:1500px){
+  .app{max-width:1400px;grid-template-columns:270px minmax(0,1fr)}
+  .vocab-list{grid-template-columns:repeat(4,1fr)}
+  #navCards{grid-template-columns:repeat(4,1fr)}
+}
 </style>
 </head>
 <body>
