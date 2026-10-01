@@ -338,6 +338,37 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
 .sub-btn:hover{border-color:var(--accent);color:var(--accent)}
 .sub-btn.act{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
 
+
+/* ── 句式：學習／遊戲 切換 + 重組遊戲 ── */
+.seg{display:inline-flex;background:var(--surface2);border-radius:20px;padding:3px;margin-bottom:14px;gap:2px}
+.seg-btn{border:none;background:transparent;padding:6px 16px;border-radius:17px;font-size:13px;font-weight:600;color:var(--text-sub);cursor:pointer;font-family:inherit;transition:all .15s}
+.seg-btn.act{background:var(--surface);color:var(--accent);box-shadow:var(--shadow)}
+.sg-q{font-size:18px;font-weight:600;line-height:1.5;margin-bottom:8px}
+.sg-tools{display:flex;gap:8px;flex-wrap:wrap}
+.sg-mini{border:1.5px solid var(--border);background:var(--surface);border-radius:16px;padding:4px 12px;font-size:12px;cursor:pointer;font-family:inherit;color:var(--text-sub)}
+.sg-mini.on{background:var(--yellow-bg);border-color:var(--yellow);color:var(--yellow)}
+.sg-slots{display:flex;flex-wrap:wrap;gap:8px;padding:12px;background:var(--surface2);border-radius:var(--radius);min-height:84px;margin:12px 0}
+.sg-slot{flex:0 0 auto;min-width:78px;min-height:70px;border:2px dashed var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.5)}
+.sg-slot.filled{border:none;background:transparent}
+.sg-n{color:var(--text-muted);font-family:'Space Mono',monospace;font-size:13px}
+.sg-pool{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding:6px 0 4px}
+.sg-card{background:var(--surface);border:2px solid var(--border);border-radius:12px;padding:8px 14px;min-width:70px;text-align:center;cursor:pointer;font-family:inherit;box-shadow:var(--shadow);transition:transform .12s,border-color .15s}
+.sg-card:hover:not(:disabled){transform:translateY(-2px);border-color:var(--accent)}
+.sg-card:disabled{cursor:default}
+.sg-card.ok{background:var(--green-bg);border-color:var(--green)!important}
+.sg-card.bad{background:var(--red-bg);border-color:var(--red)!important;animation:sgShake .35s}
+.sg-char{font-family:var(--serif);font-size:22px;font-weight:700;color:var(--text)}
+.sg-jyut{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-sub);margin-top:2px}
+.sg-role{font-size:10px;font-weight:700;margin-bottom:2px}
+.sg-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+.sg-btn{border:1.5px solid var(--border);background:var(--surface);border-radius:20px;padding:9px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--text-sub)}
+.sg-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.sg-btn:disabled{opacity:.4;cursor:not-allowed}
+.sg-msg{text-align:center;font-size:13px;margin-top:10px;color:var(--text-sub)}
+.sg-msg.good{color:var(--green);font-weight:700}
+.sg-msg.bad{color:var(--red)}
+@keyframes sgShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+
 /* ══════════════ RESPONSIVE ══════════════ */
 /* 平板／細視窗：置中「卡片」，闊啲，內容分多欄 */
 @media (min-width:720px){
@@ -494,8 +525,10 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
   <div class="page" id="page-sentence">
     <div class="sec">📐 句子結構</div>
     <p style="font-size:12px;color:var(--text-sub);margin-bottom:14px;font-family:'Noto Sans Thai'">ดูโครงสร้างประโยคภาษากวางตุ้ง</p>
+    <div class="seg" id="ssMode"></div>
     <div class="filter-bar" id="ssFilterBar"></div>
     <div id="ssContent"></div>
+    <div id="ssGame" style="display:none"></div>
   </div>
 
   <!-- CLASSIFIER -->
@@ -1051,6 +1084,15 @@ function vocabKeyOf(r){
   return {type,num};
 }
 function normalizeSheetData(){
+  // 跳過空白行：只填咗 lesson_id／type／chapter、但 jyutping／char／thai 都空嘅行（會變成空白卡）
+  const before=S.data.vocab.length;
+  const blankRows=[];
+  S.data.vocab=S.data.vocab.filter(w=>{
+    const ok=String(w.char||'').trim()||String(w.jyutping||'').trim()||String(w.thai||'').trim();
+    if(!ok)blankRows.push((w.type||'')+' '+(w.chapter||w.lesson_id||'?'));
+    return !!ok;
+  });
+  if(blankRows.length)console.warn('[詞彙] 已跳過 '+blankRows.length+' 行空白（'+before+' → '+S.data.vocab.length+'）。涉及：',[...new Set(blankRows)].join(' / '));
   S.data.vocab.forEach(w=>{const k=vocabKeyOf(w);w._type=k.type;w._num=k.num;});
   // 同一個 lesson_id 可以有 Chapter／Extra／Grammar 幾行，所以用 lesson_id+type 做唯一 key（撞咗就加序號）
   const seen={};
@@ -1166,11 +1208,25 @@ window.selectVocab=i=>{S.vocabIdx=i;renderVocab();};
 function buildSentence(){
   const rows=S.data.sentence;
   const ids=[...new Set(rows.map(r=>r.pattern_id))];
-  S.ssPatternId=ids[0];
-  const bar=$('ssFilterBar');
+  if(!ids.includes(S.ssPatternId))S.ssPatternId=ids[0];
+  const mode=$('ssMode');mode.innerHTML='';
+  [['learn','📖 學習'],['game','🎮 重組句子']].forEach(([m,label])=>{
+    const b=h('button','seg-btn'+(SG.mode===m?' act':''),label);
+    b.addEventListener('click',()=>{if(SG.mode===m)return;SG.mode=m;if(m==='game')startSsGame();buildSentence();});
+    mode.appendChild(b);
+  });
+  const learn=SG.mode==='learn';
+  $('ssFilterBar').style.display=learn?'':'none';
+  $('ssContent').style.display=learn?'':'none';
+  $('ssGame').style.display=learn?'none':'';
+  if(!learn){
+    if(!SG.queue.length)startSsGame();
+    renderSsGame();return;
+  }
+  const bar=$('ssFilterBar');bar.innerHTML='';
   ids.forEach(id=>{
     const meta=rows.find(r=>r.pattern_id===id);
-    const btn=h('button','f-btn'+(id===ids[0]?' act':''),meta.title);
+    const btn=h('button','f-btn'+(id===S.ssPatternId?' act':''),meta.title);
     btn.addEventListener('click',()=>{S.ssPatternId=id;renderSentence();bar.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('act'));btn.classList.add('act');});
     bar.appendChild(btn);
   });
@@ -1183,6 +1239,111 @@ function renderSentence(){
   const tokens=rows.sort((a,b)=>+a.part_order-+b.part_order);
   $('ssContent').innerHTML='<div class="ss-card"><div style="font-size:12px;color:var(--text-sub);font-family:\'Noto Sans Thai\';margin-bottom:8px">'+meta.titleThai+'</div><div class="ss-ex">'+meta.example+'</div><div class="ss-jyut">'+meta.jyutping+'</div><div class="ss-thai">'+meta.thai+'</div></div><div class="ss-tokens">'+tokens.map(t=>'<div class="ss-tok" style="border-color:'+t.color+'"><div class="tok-role" style="color:'+t.color+'">'+t.role+'</div><div class="tok-char">'+t.text+'</div><div class="tok-jyut">'+t.jyut+'</div><div class="tok-thai">'+t.roleThai+'</div></div>').join('')+'</div>';
 }
+
+//  SENTENCE GAME
+const SG={mode:'learn',queue:[],i:0,tokens:[],pool:[],slots:[],tries:0,hint:false,done:false,score:0,marks:null,msg:'',gaveUp:false,finished:false};
+const SG_ROUND=6;
+function ssPatterns(){
+  const byId={};
+  S.data.sentence.forEach(r=>{(byId[r.pattern_id]=byId[r.pattern_id]||[]).push(r);});
+  return Object.keys(byId).map(id=>{
+    const all=byId[id];
+    const rows=all.filter(r=>String(r.text||'').trim()).sort((a,b)=>(+a.part_order||0)-(+b.part_order||0));
+    const pick=k=>{const r=all.find(x=>String(x[k]||'').trim());return r?String(r[k]).trim():'';};
+    return {id,rows,title:pick('title'),thai:pick('thai'),example:pick('example'),jyutping:pick('jyutping')};
+  }).filter(p=>p.rows.length>=2);
+}
+function startSsGame(){
+  SG.queue=shuffle(ssPatterns()).slice(0,SG_ROUND);
+  SG.i=0;SG.score=0;SG.finished=false;
+  if(SG.queue.length)ssNewQuestion();
+}
+function ssNewQuestion(){
+  const p=SG.queue[SG.i];
+  SG.tokens=p.rows.map((r,k)=>({k,text:String(r.text).trim(),jyut:r.jyut||'',role:r.role||'',roleThai:r.roleThai||'',color:r.color||'#0E6B57'}));
+  const correct=SG.tokens.map(t=>t.text).join('|');
+  const distinct=new Set(SG.tokens.map(t=>t.text)).size>1;
+  let pool=shuffle(SG.tokens.map(t=>t.k));
+  for(let n=0;n<12&&distinct&&pool.map(k=>SG.tokens[k].text).join('|')===correct;n++)pool=shuffle(pool);
+  SG.pool=pool;
+  SG.slots=SG.tokens.map(()=>null);
+  SG.tries=0;SG.hint=false;SG.done=false;SG.marks=null;SG.msg='';SG.gaveUp=false;
+}
+function ssAddScore(n){
+  if(!n)return;
+  SG.score+=n;
+  var prev=S.totalScore;S.totalScore+=n;var chip=$('totalScore');
+  animateNumber(chip,prev,S.totalScore,600,'','★ ');
+  chip.classList.remove('bump');void chip.offsetWidth;chip.classList.add('bump');
+}
+function ssCardHtml(t,extra,onclick,showRole){
+  const role=showRole&&t.role?'<div class="sg-role" style="color:'+t.color+'">'+t.role+(t.roleThai?' · '+t.roleThai:'')+'</div>':'';
+  return'<button class="sg-card'+(extra||'')+'" style="'+(showRole?'border-color:'+t.color:'')+'" '+(onclick?'onclick="'+onclick+'"':'disabled')+'>'+role+'<div class="sg-char">'+t.text+'</div>'+(t.jyut?'<div class="sg-jyut">'+t.jyut+'</div>':'')+'</button>';
+}
+function renderSsGame(){
+  const box=$('ssGame');
+  if(!SG.queue.length){
+    box.innerHTML='<div class="ss-card"><div style="font-size:14px;color:var(--text-sub)">「句式」Sheet 暫時未有可以玩嘅句子。每個 pattern_id 要有最少 2 行 token（part_order、text）。</div></div>';
+    return;
+  }
+  if(SG.finished){
+    box.innerHTML='<div class="ss-card" style="text-align:center"><div style="font-size:40px">🎉</div><div class="ss-ex">完成晒！</div><div style="margin:8px 0 14px;color:var(--text-sub)">今次得 <b style="color:var(--accent)">'+SG.score+'</b> 分（'+SG.queue.length+' 題）</div><button class="sg-btn primary" onclick="ssRestart()">再玩一次</button></div>';
+    return;
+  }
+  const p=SG.queue[SG.i];
+  const placed=new Set(SG.slots.filter(k=>k!==null));
+  const allFilled=SG.slots.every(k=>k!==null);
+  const reveal=SG.hint||SG.done;
+  const slotsHtml=SG.slots.map((k,idx)=>{
+    if(k===null)return'<div class="sg-slot"><span class="sg-n">'+(idx+1)+'</span></div>';
+    const t=SG.tokens[k];
+    const cls=SG.done?' ok':(SG.marks?(SG.marks[idx]?' ok':' bad'):'');
+    return'<div class="sg-slot filled">'+ssCardHtml(t,cls,SG.done?'':'ssTakeBack('+idx+')',reveal)+'</div>';
+  }).join('');
+  const poolHtml=SG.pool.filter(k=>!placed.has(k)).map(k=>ssCardHtml(SG.tokens[k],'','ssPlace('+k+')',SG.hint)).join('');
+  let actions='';
+  if(SG.done){
+    actions='<button class="sg-btn primary" onclick="ssNext()">'+(SG.i+1>=SG.queue.length?'睇成績 ➜':'下一題 ➜')+'</button>';
+  }else{
+    actions='<button class="sg-btn primary" '+(allFilled?'':'disabled')+' onclick="ssCheck()">檢查答案</button><button class="sg-btn" onclick="ssReset()">🔄 重來</button>'+(SG.tries>=2?'<button class="sg-btn" onclick="ssGiveUp()">👀 睇答案</button>':'');
+  }
+  const feedback=SG.msg?'<div class="sg-msg '+(SG.done&&!SG.gaveUp?'good':(SG.done?'':'bad'))+'">'+SG.msg+'</div>':'';
+  const fullText=SG.tokens.map(t=>t.text).join('');
+  const doneCard=SG.done?'<div class="ss-card" style="margin-top:12px"><div class="ss-ex">'+fullText+'</div><div class="ss-jyut">'+(p.jyutping||'')+'</div><div class="ss-thai">'+(p.thai||'')+'</div></div>':'';
+  box.innerHTML='<div class="g-hdr"><span class="score-pill">★ '+SG.score+'</span><span class="round-pill">'+(SG.i+1)+' / '+SG.queue.length+'</span></div>'
+    +'<div class="ss-card"><div style="font-size:12px;color:var(--text-sub);margin-bottom:6px">將卡牌排成正確嘅句子 👇</div>'
+    +(p.thai?'<div class="sg-q" style="font-family:\'Noto Sans Thai\'">'+p.thai+'</div>':'<div class="sg-q">'+(p.title||'')+'</div>')
+    +'<div class="sg-tools">'+(Speech.supported?'<button class="sg-mini" onclick="ssSpeak()">🔊 聽句子</button>':'')+'<button class="sg-mini'+(SG.hint?' on':'')+'" onclick="ssHint()">💡 顯示詞性</button></div></div>'
+    +'<div class="sg-slots">'+slotsHtml+'</div>'
+    +(SG.done?'':'<div class="sg-pool">'+poolHtml+'</div>')
+    +feedback+'<div class="sg-actions">'+actions+'</div>'+doneCard;
+}
+window.ssPlace=k=>{if(SG.done)return;const i=SG.slots.indexOf(null);if(i<0)return;SG.slots[i]=k;SG.marks=null;SG.msg='';renderSsGame();};
+window.ssTakeBack=i=>{if(SG.done)return;SG.slots[i]=null;SG.marks=null;SG.msg='';renderSsGame();};
+window.ssReset=()=>{SG.slots=SG.tokens.map(()=>null);SG.marks=null;SG.msg='';renderSsGame();};
+window.ssHint=()=>{SG.hint=!SG.hint;renderSsGame();};
+window.ssSpeak=()=>{Speech.speak(SG.tokens.map(t=>t.text).join(''));};
+window.ssCheck=()=>{
+  const marks=SG.slots.map((k,i)=>SG.tokens[k].text===SG.tokens[i].text);
+  if(marks.every(Boolean)){
+    const pts=SG.tries===0?10:SG.tries===1?5:2;
+    ssAddScore(pts);
+    SG.done=true;SG.marks=null;SG.msg='✅ 啱！+'+pts+' 分';
+  }else{
+    SG.tries++;SG.marks=marks;SG.msg='❌ 有'+marks.filter(x=>!x).length+'個位未啱（紅色嗰啲），撳紅色卡牌拎走再試下';
+  }
+  renderSsGame();
+};
+window.ssGiveUp=()=>{
+  SG.slots=SG.tokens.map(t=>t.k);
+  SG.done=true;SG.gaveUp=true;SG.marks=null;SG.msg='正確答案如下，下次加油 💪';
+  renderSsGame();
+};
+window.ssNext=()=>{
+  if(SG.i+1>=SG.queue.length){SG.finished=true;}else{SG.i++;ssNewQuestion();}
+  renderSsGame();
+};
+window.ssRestart=()=>{startSsGame();renderSsGame();};
 
 // ── CLASSIFIER ────────────────────────────────────────────────
 function buildClassifier(){
