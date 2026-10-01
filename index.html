@@ -885,6 +885,8 @@ function loadData() {
     if (w.tone && w.tone.includes('/')) w.tone = w.tone.split('/').pop().trim();
   });
 
+  normalizeSheetData();
+
   // Hide loading, launch app immediately
   $('loadingScreen').style.display = 'none';
   initAll();
@@ -938,13 +940,14 @@ async function refreshFromSheets() {
       S.data.vocab.forEach(w => {
         if (w.tone && w.tone.includes('/')) w.tone = w.tone.split('/').pop().trim();
       });
+      normalizeSheetData();
       console.log('[Sheets] Background refresh done — data updated');
       // Silently re-render current tab
       if (v)                      { buildVocab(); }
       if (S.tab === 'dialogue')   { renderDlTitles(); }
       if (S.tab === 'classifier') { buildClassifier(); }
       if (S.tab === 'sentence')   { buildSentence(); }
-      if (S.tab === 'lessons')    { renderLessons('all'); }
+      if (l || v)                 { buildLessons(); }
     }
   } catch(e) {
     console.warn('[Sheets] Background refresh failed:', e.message);
@@ -1006,10 +1009,43 @@ function buildHome() {
 
 // ── VOCAB ─────────────────────────────────────────────────────
 // 分類排序：Extra → Gram → Ch01…Ch58（按數字）→ Song → 其他
+// ── 詞彙／課堂：新 Sheet 欄位（lesson_id,type,chapter,…）標準化 ──
+function pad2(n){return String(n).padStart(2,'0');}
+function lessonChapterNum(r){
+  const c=String(r.chapter||'').trim();
+  if(/^\d+$/.test(c))return parseInt(c,10);
+  const m=/(\d+)/.exec(String(r.lesson_id||''));
+  return m?parseInt(m[1],10):null;
+}
+// 舊版 Sheet 有 category 欄就直接用；新版冇，就由 type + chapter 砌出嚟（Ch01／Extra Ch01／Grammar Ch01）
+function vocabCategoryOf(r){
+  const given=(r.category||'').trim();
+  if(given)return given;
+  const n=lessonChapterNum(r);
+  const t=String(r.type||'').trim().toLowerCase();
+  if(n===null)return String(r.type||r.lesson_id||'').trim();
+  const ch='Ch'+pad2(n);
+  if(t==='extra')return 'Extra '+ch;
+  if(t==='grammar'||t==='gram')return 'Grammar '+ch;
+  return ch;
+}
+function normalizeSheetData(){
+  S.data.vocab.forEach(w=>{ w.category=vocabCategoryOf(w); });
+  // 同一個 lesson_id 可以有 Chapter／Extra／Grammar 幾行，所以用 lesson_id+type 做唯一 key（撞咗就加序號）
+  const seen={};
+  S.data.lessons.forEach(l=>{
+    let k=(String(l.lesson_id||'x')+'_'+String(l.type||'')).toLowerCase().replace(/[^a-z0-9_]+/g,'_');
+    if(seen[k]){seen[k]++;k+='_'+seen[k];}else{seen[k]=1;}
+    l._key=k;
+  });
+}
+
 function vocabCategorySort(cats){
   const rank=c=>{
     if(c==='Extra')return[0,0];
     if(c==='Gram'||c==='Grammar')return[1,0];
+    let mm=/^Extra\s*Ch\s*0*(\d+)/i.exec(c);if(mm)return[0,parseInt(mm[1],10)];
+    mm=/^Gram(?:mar)?\s*Ch\s*0*(\d+)/i.exec(c);if(mm)return[1,parseInt(mm[1],10)];
     const m=/^Ch\s*0*(\d+)/i.exec(c);
     if(m)return[2,parseInt(m[1],10)];
     if(c==='Song')return[3,0];
@@ -2253,36 +2289,46 @@ function animateNumber(el,from,to,duration,suffix,prefix){
 }
 
 // ── LESSONS ───────────────────────────────────────────────────
-function getLessonUnlocked(lessonId,row){
-  if(row.unlocked_by_default==='TRUE')return true;
-  return localStorage.getItem('unlocked_'+lessonId)==='1';
+function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function getLessonUnlocked(row){
+  if(String(row.unlocked_by_default||'').trim().toUpperCase()==='TRUE')return true;
+  return lsGet('unlocked_'+row._key)==='1';
 }
 function buildLessons(){
   const lessons=S.data.lessons;
-  if(!lessons.length)return;
-  const types=['all',...new Set(lessons.map(l=>l.type))];
-  const typeLabel={all:'全部',Chapter:'Chapter',Grammar:'Grammar',Extra:'Extra'};
   const bar=$('lessonFilterBar');
-  let currentFilter='all';
+  bar.innerHTML='';
+  if(!lessons.length)return;
+  const types=['all',...new Set(lessons.map(l=>l.type).filter(Boolean))];
+  const typeLabel={all:'全部'};
+  if(!types.includes(S.lessonFilter))S.lessonFilter='all';
   types.forEach(t=>{
-    const btn=h('button','f-btn'+(t==='all'?' act':''),typeLabel[t]||t);
-    btn.addEventListener('click',()=>{currentFilter=t;bar.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('act'));btn.classList.add('act');renderLessons(currentFilter);});
+    const btn=h('button','f-btn'+(t===S.lessonFilter?' act':''),typeLabel[t]||t);
+    btn.addEventListener('click',()=>{bar.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('act'));btn.classList.add('act');renderLessons(t);});
     bar.appendChild(btn);
   });
-  renderLessons('all');
+  renderLessons(S.lessonFilter);
 }
 function renderLessons(filter){
+  S.lessonFilter=filter||'all';
   const lessons=S.data.lessons;
-  const filtered=filter==='all'?lessons:lessons.filter(l=>l.type===filter);
+  const filtered=S.lessonFilter==='all'?lessons:lessons.filter(l=>l.type===S.lessonFilter);
   const sorted=[...filtered].sort((a,b)=>(+a.order||0)-(+b.order||0)||(+a.chapter||0)-(+b.chapter||0));
   const total=lessons.length;
-  const unlocked=lessons.filter(l=>getLessonUnlocked(l.lesson_id,l)).length;
-  $('lessonProgress').innerHTML='<div class="lesson-progress">已解鎖 '+unlocked+' / '+total+' 個課堂<div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:'+Math.round(unlocked/total*100)+'%"></div></div></div>';
+  const unlocked=lessons.filter(l=>getLessonUnlocked(l)).length;
+  $('lessonProgress').innerHTML='<div class="lesson-progress">已解鎖 '+unlocked+' / '+total+' 個課堂<div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:'+Math.round(unlocked/Math.max(total,1)*100)+'%"></div></div></div>';
   $('lessonList').innerHTML=sorted.map(l=>{
-    const un=getLessonUnlocked(l.lesson_id,l);
+    const un=getLessonUnlocked(l);
+    const k=l._key;
     const chLabel=l.chapter!==undefined&&l.chapter!==''?'Ch'+String(l.chapter).padStart(2,'0'):'';
-    return'<div class="lesson-card" id="lcard-'+l.lesson_id+'"><div class="lc-header" onclick="toggleLesson(\''+l.lesson_id+'\')"><span class="lc-badge '+l.type+'">'+l.type+'</span>'+(chLabel?'<span class="lc-ch">'+chLabel+'</span>':'')+'<span class="lc-title">'+l.title+'</span>'+(un?'<span class="lc-chevron" id="chev-'+l.lesson_id+'">›</span>':'<span style="font-size:14px">🔒</span>')+'</div><div class="lc-body" id="lbody-'+l.lesson_id+'">'+(un?renderLessonBody(l):renderUnlockForm(l))+'</div></div>';
+    return'<div class="lesson-card" id="lcard-'+k+'"><div class="lc-header" onclick="toggleLesson(\''+k+'\')"><span class="lc-badge '+l.type+'">'+l.type+'</span>'+(chLabel?'<span class="lc-ch">'+chLabel+'</span>':'')+'<span class="lc-title">'+l.title+'</span>'+(un?'<span class="lc-chevron" id="chev-'+k+'">›</span>':'<span style="font-size:14px">🔒</span>')+'</div><div class="lc-body" id="lbody-'+k+'">'+(un?renderLessonBody(l):renderUnlockForm(l))+'</div></div>';
   }).join('');
+  if(S.openLesson){
+    const body=$('lbody-'+S.openLesson),chev=$('chev-'+S.openLesson);
+    if(body)body.classList.add('open');
+    if(chev)chev.classList.add('open');
+  }
 }
 function renderLessonBody(l){
   let html='';
@@ -2293,43 +2339,56 @@ function renderLessonBody(l){
     const ytLinks=l.youtube_url.trim().split(/\s+/).filter(u=>u.startsWith('http'));
     html+='<div class="lc-section"><div class="lc-label">▶️ 教學影片</div>'+ytLinks.map((url,i)=>'<a class="media-btn youtube" href="'+url+'" target="_blank" rel="noopener"><span class="icon">▶</span><span class="lbl">YouTube'+(ytLinks.length>1?' ('+(i+1)+')':'')+' — '+l.title+'</span><span class="ext">↗</span></a>').join('')+'</div>';
   }
+  // 同「詞彙」分頁對返：lesson_id + type（Chapter／Extra／Grammar）+ chapter 一樣就當同一課
+  const cat=vocabCategoryOf(l);
+  const words=S.data.vocab.filter(w=>w.category===cat);
+  if(words.length){
+    html+='<div class="lc-section"><div class="lc-label">📚 本課詞彙（'+words.length+'）</div><div class="lc-vocab-grid">'
+      +words.map(w=>'<div class="lc-vocab-item"><div class="lc-vocab-jyut">'+w.jyutping+'</div><div class="lc-vocab-char">'+w.char+'</div><div class="lc-vocab-thai">'+w.thai+'</div></div>').join('')
+      +'</div><button class="unlock-btn" style="margin-top:10px" onclick="practiceLessonVocab(\''+l._key+'\')">🃏 用閃卡練習呢課詞彙</button></div>';
+  }
   return html||'<div style="font-size:13px;color:var(--text-muted)">暫冇額外材料</div>';
 }
 function renderUnlockForm(l){
-  return'<div class="locked-overlay">🔒 呢個課堂需要解鎖密碼</div><div class="unlock-form"><input class="unlock-input" type="password" placeholder="輸入老師俾嘅密碼..." id="pw-'+l.lesson_id+'" onkeydown="if(event.key===\'Enter\')tryUnlock(\''+l.lesson_id+'\')"><button class="unlock-btn" onclick="tryUnlock(\''+l.lesson_id+'\')">解鎖</button></div><div class="unlock-err" id="pwerr-'+l.lesson_id+'"></div>';
+  const k=l._key;
+  return'<div class="locked-overlay">🔒 呢個課堂需要解鎖密碼</div><div class="unlock-form"><input class="unlock-input" type="password" placeholder="輸入老師俾嘅密碼..." id="pw-'+k+'" onkeydown="if(event.key===\'Enter\')tryUnlock(\''+k+'\')"><button class="unlock-btn" onclick="tryUnlock(\''+k+'\')">解鎖</button></div><div class="unlock-err" id="pwerr-'+k+'"></div>';
 }
-window.toggleLesson=id=>{
-  const body=$('lbody-'+id);const chev=$('chev-'+id);if(!body)return;
+window.toggleLesson=key=>{
+  const body=$('lbody-'+key);const chev=$('chev-'+key);if(!body)return;
   const isOpen=body.classList.contains('open');
   document.querySelectorAll('.lc-body').forEach(b=>b.classList.remove('open'));
   document.querySelectorAll('.lc-chevron').forEach(c=>c.classList.remove('open'));
+  S.openLesson=isOpen?null:key;
   if(!isOpen){body.classList.add('open');if(chev)chev.classList.add('open');}
 };
-window.tryUnlock=(id)=>{
-  const input=$('pw-'+id);const errEl=$('pwerr-'+id);if(!input)return;
-  const lesson=S.data.lessons.find(l=>l.lesson_id===id);
-  const correctPw=lesson&&lesson.password?String(lesson.password).trim():'';
+window.practiceLessonVocab=key=>{
+  const l=S.data.lessons.find(x=>x._key===key);if(!l)return;
+  S.vocabCat=vocabCategoryOf(l);S.vocabIdx=0;
+  buildVocab();showTab('vocab');
+};
+window.tryUnlock=(key)=>{
+  const input=$('pw-'+key);const errEl=$('pwerr-'+key);if(!input)return;
+  const lesson=S.data.lessons.find(l=>l._key===key);
+  const correctPw=lesson&&lesson.password!=null?String(lesson.password).trim():'';
+  const showErr=m=>{if(errEl){errEl.textContent=m;setTimeout(()=>{if(errEl)errEl.textContent='';},3500);}};
   if(!correctPw){
-    if(errEl){
-      errEl.textContent = S.sourceStatus.lessons==='fallback'
-        ? '暫時連唔到 Google Sheet，攞唔到最新密碼設定，請檢查網絡再試（或撳下面嘅同步提示重試）。'
-        : '請聯絡老師取得密碼。';
-    }
+    showErr(S.sourceStatus.lessons==='fallback'
+      ? '⚠️ 未連到 Google Sheet，暫時核對唔到密碼。請撳頁頂「重新整理」再試。'
+      : '呢個課堂喺 Sheet 入面未有設定密碼，請聯絡老師。');
     return;
   }
-  const entered=input.value.trim();
-  if(entered===correctPw){
-    localStorage.setItem('unlocked_'+id,'1');
-    const activeFilter=document.querySelector('#lessonFilterBar .f-btn.act');
-    renderLessons(activeFilter?activeFilter.textContent:'all');
+  if(input.value.trim()===correctPw){
+    lsSet('unlocked_'+key,'1');
+    S.openLesson=key;
+    renderLessons(S.lessonFilter||'all');
   } else {
-    if(errEl){errEl.textContent='密碼錯誤，請再試。';setTimeout(()=>{errEl.textContent='';},2000);}
+    showErr('密碼唔啱，請再試。');
   }
 };
 
 async function tryFetchSheet(name, url) {
   try {
-    const r = await fetch(url);
+    const r = await fetch(url + '&_=' + Date.now(), { cache: 'no-store' });
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const text = await r.text();
     if (!text || text.trim().startsWith('<')) throw new Error('not CSV');
