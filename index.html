@@ -331,6 +331,13 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
 .progress-bar-wrap{background:var(--surface2);border-radius:20px;height:6px;margin-top:4px;overflow:hidden}
 .progress-bar-fill{background:linear-gradient(90deg,var(--accent),var(--yellow));height:6px;border-radius:20px;transition:width .4s}
 
+
+/* ── 詞彙：第二行（課號）── */
+.sub-bar{display:flex;flex-wrap:wrap;gap:6px;margin:-4px 0 14px}
+.sub-btn{min-width:38px;padding:4px 10px;border-radius:14px;border:1.5px solid var(--border);background:var(--surface);color:var(--text-sub);font-size:12px;cursor:pointer;font-family:'Space Mono',monospace;font-weight:700;transition:all .15s}
+.sub-btn:hover{border-color:var(--accent);color:var(--accent)}
+.sub-btn.act{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
+
 /* ══════════════ RESPONSIVE ══════════════ */
 /* 平板／細視窗：置中「卡片」，闊啲，內容分多欄 */
 @media (min-width:720px){
@@ -457,6 +464,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
   <!-- VOCAB -->
   <div class="page" id="page-vocab">
     <div class="filter-bar" id="vocabFilterBar"></div>
+    <div class="sub-bar" id="vocabSubBar"></div>
     <div class="fc-nav">
       <button class="fc-arr" id="fcPrev">‹</button>
       <span class="fc-count" id="fcCount">1 / 1</span>
@@ -588,7 +596,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
 const S = {
   tab: 'home',
   data: { vocab:[], dialogue:[], classifier:[], sentence:[], lessons:[] },
-  vocabCat: 'all', vocabIdx: 0,
+  vocabType: null, vocabSub: null, vocabIdx: 0,
   ssPatternId: null,
   dlCat: 'all', dlId: null,
   showJyut: true, showThai: true,
@@ -1009,28 +1017,41 @@ function buildHome() {
 
 // ── VOCAB ─────────────────────────────────────────────────────
 // 分類排序：Extra → Gram → Ch01…Ch58（按數字）→ Song → 其他
-// ── 詞彙／課堂：新 Sheet 欄位（lesson_id,type,chapter,…）標準化 ──
-function pad2(n){return String(n).padStart(2,'0');}
-function lessonChapterNum(r){
-  const c=String(r.chapter||'').trim();
-  if(/^\d+$/.test(c))return parseInt(c,10);
-  const m=/(\d+)/.exec(String(r.lesson_id||''));
-  return m?parseInt(m[1],10):null;
+// ── 詞彙／課堂：分類（Chapter／Extra／Song／Grammar → 再分第幾課）──
+const VOCAB_TYPE_ORDER=['Chapter','Extra','Song','Grammar'];
+function normType(t){
+  const x=String(t||'').trim().toLowerCase();
+  if(!x)return '';
+  if(x==='chapter'||x==='ch')return 'Chapter';
+  if(x==='extra')return 'Extra';
+  if(x==='song'||x==='songs')return 'Song';
+  if(x==='grammar'||x==='gram')return 'Grammar';
+  return x.charAt(0).toUpperCase()+x.slice(1);
 }
-// 舊版 Sheet 有 category 欄就直接用；新版冇，就由 type + chapter 砌出嚟（Ch01／Extra Ch01／Grammar Ch01）
-function vocabCategoryOf(r){
-  const given=(r.category||'').trim();
-  if(given)return given;
-  const n=lessonChapterNum(r);
-  const t=String(r.type||'').trim().toLowerCase();
-  if(n===null)return String(r.type||r.lesson_id||'').trim();
-  const ch='Ch'+pad2(n);
-  if(t==='extra')return 'Extra '+ch;
-  if(t==='grammar'||t==='gram')return 'Grammar '+ch;
-  return ch;
+// 由一行資料（詞彙或課堂都用得）攞出 {type, num}
+// 新格式：type + chapter 欄；舊格式：category 欄（例如 "Ch01"、"Extra"、"Song"）
+function vocabKeyOf(r){
+  let type=normType(r.type);
+  let num=null;
+  const cn=String(r.chapter==null?'':r.chapter).trim();
+  if(/^\d+$/.test(cn))num=parseInt(cn,10);
+  const cat=String(r.category||'').trim();
+  const lid=String(r.lesson_id||'').trim();
+  if(!type&&cat){
+    const m=/^(extra|gram(?:mar)?|song)/i.exec(cat);
+    type=m?normType(m[1]):(/^ch/i.test(cat)?'Chapter':normType(cat));
+  }
+  if(!type&&lid){
+    const m=/^(extra|gram(?:mar)?|song)/i.exec(lid);
+    type=m?normType(m[1]):'Chapter';
+  }
+  if(!type)type='Chapter';
+  if(num===null&&cat){const m=/ch\s*0*(\d+)/i.exec(cat);if(m)num=parseInt(m[1],10);}
+  if(num===null&&lid){const m=/(\d+)/.exec(lid);if(m)num=parseInt(m[1],10);}
+  return {type,num};
 }
 function normalizeSheetData(){
-  S.data.vocab.forEach(w=>{ w.category=vocabCategoryOf(w); });
+  S.data.vocab.forEach(w=>{const k=vocabKeyOf(w);w._type=k.type;w._num=k.num;});
   // 同一個 lesson_id 可以有 Chapter／Extra／Grammar 幾行，所以用 lesson_id+type 做唯一 key（撞咗就加序號）
   const seen={};
   S.data.lessons.forEach(l=>{
@@ -1040,29 +1061,61 @@ function normalizeSheetData(){
   });
 }
 
-function vocabCategorySort(cats){
-  const rank=c=>{
-    if(c==='Extra')return[0,0];
-    if(c==='Gram'||c==='Grammar')return[1,0];
-    let mm=/^Extra\s*Ch\s*0*(\d+)/i.exec(c);if(mm)return[0,parseInt(mm[1],10)];
-    mm=/^Gram(?:mar)?\s*Ch\s*0*(\d+)/i.exec(c);if(mm)return[1,parseInt(mm[1],10)];
-    const m=/^Ch\s*0*(\d+)/i.exec(c);
-    if(m)return[2,parseInt(m[1],10)];
-    if(c==='Song')return[3,0];
-    return[4,0];
-  };
-  return[...cats].sort((a,b)=>{const[pa,na]=rank(a),[pb,nb]=rank(b);return pa-pb||na-nb||a.localeCompare(b);});
+// ── 詞彙頁：第一行揀類別（Chapter／Extra／Song…），第二行揀第幾課（1–52…）──
+function vocabTypes(){
+  const set=new Set(S.data.vocab.map(w=>w._type).filter(Boolean));
+  const rank=t=>{const i=VOCAB_TYPE_ORDER.indexOf(t);return i<0?99:i;};
+  return [...set].sort((a,b)=>rank(a)-rank(b)||a.localeCompare(b));
 }
-function buildVocab() {
-  const cats=vocabCategorySort([...new Set(S.data.vocab.map(w=>(w.category||'').trim()).filter(Boolean))]);
-  const bar=$('vocabFilterBar');
+// 呢個類別有邊啲「課」：[{v:1,label:'1',count:n}, …]，冇課號嘅字歸入「其他」
+function vocabSubs(type){
+  const cnt={};let misc=0;
+  S.data.vocab.forEach(w=>{
+    if(w._type!==type)return;
+    if(w._num===null)misc++;else cnt[w._num]=(cnt[w._num]||0)+1;
+  });
+  const subs=Object.keys(cnt).map(Number).sort((a,b)=>a-b).map(n=>({v:n,label:String(n),count:cnt[n]}));
+  if(subs.length&&misc)subs.push({v:'misc',label:'其他',count:misc});
+  return subs;
+}
+function defaultSub(type){const subs=vocabSubs(type);return subs.length?subs[0].v:'all';}
+function filtered(){
+  return S.data.vocab.filter(w=>{
+    if(w._type!==S.vocabType)return false;
+    if(S.vocabSub==='all')return true;
+    if(S.vocabSub==='misc')return w._num===null;
+    return w._num===S.vocabSub;
+  });
+}
+function renderVocabBars(){
+  const bar=$('vocabFilterBar'),sub=$('vocabSubBar');
   bar.innerHTML='';
-  if(!cats.includes(S.vocabCat))S.vocabCat=cats[0];
-  cats.forEach(c=>{
-    const btn=h('button','f-btn'+(c===S.vocabCat?' act':''),c);
-    btn.addEventListener('click',()=>{S.vocabCat=c;S.vocabIdx=0;renderVocab();bar.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('act'));btn.classList.add('act');});
+  vocabTypes().forEach(t=>{
+    const n=S.data.vocab.filter(w=>w._type===t).length;
+    const btn=h('button','f-btn'+(t===S.vocabType?' act':''),t+' ('+n+')');
+    btn.addEventListener('click',()=>{S.vocabType=t;S.vocabSub=defaultSub(t);S.vocabIdx=0;renderVocabBars();renderVocab();});
     bar.appendChild(btn);
   });
+  sub.innerHTML='';
+  const subs=vocabSubs(S.vocabType);
+  if(!subs.length){sub.style.display='none';return;}
+  sub.style.display='flex';
+  const mk=(v,label,title)=>{
+    const btn=h('button','sub-btn'+(v===S.vocabSub?' act':''),label);
+    btn.title=title;
+    btn.addEventListener('click',()=>{S.vocabSub=v;S.vocabIdx=0;renderVocabBars();renderVocab();});
+    sub.appendChild(btn);
+  };
+  mk('all','全部',S.vocabType+' 全部');
+  subs.forEach(x=>mk(x.v,x.label,(x.v==='misc'?'其他':S.vocabType+' '+x.label)+' · '+x.count+' 個詞'));
+}
+function buildVocab() {
+  const types=vocabTypes();
+  if(!types.length)return;
+  if(!types.includes(S.vocabType))S.vocabType=types[0];
+  const valid=S.vocabSub==='all'||vocabSubs(S.vocabType).some(x=>x.v===S.vocabSub);
+  if(!valid)S.vocabSub=defaultSub(S.vocabType);
+  renderVocabBars();
   if(!S.vocabBound){
     S.vocabBound=true;
     $('fcPrev').addEventListener('click',()=>{const f=filtered();if(!f.length)return;S.vocabIdx=(S.vocabIdx-1+f.length)%f.length;renderCard();});
@@ -1070,13 +1123,17 @@ function buildVocab() {
     $('fcWrap').addEventListener('click',()=>$('fcWrap').classList.toggle('flip'));
     $('fcSpeakBtn').addEventListener('click',e=>{e.stopPropagation();const w=filtered()[S.vocabIdx];if(w)Speech.speak(w.char);});
   }
-  S.vocabIdx=0;
+  if(S.vocabIdx>=filtered().length)S.vocabIdx=0;
   renderVocab();
 }
-function filtered(){return S.data.vocab.filter(w=>(w.category||'').trim()===S.vocabCat);}
 function renderVocab(){renderCard();renderVocabList();}
 function renderCard(){
-  const f=filtered(),w=f[S.vocabIdx];if(!w)return;
+  const f=filtered(),w=f[S.vocabIdx];
+  if(!w){
+    $('fcJyut').textContent='';$('fcChar').textContent='—';$('fcThai').textContent='';
+    $('fcCharSm').textContent='';$('fcTone').textContent='';$('fcCount').textContent='0 / 0';
+    return;
+  }
   $('fcWrap').classList.remove('flip');
   $('fcJyut').textContent=w.jyutping;$('fcChar').textContent=w.char;
   $('fcThai').textContent=w.thai;// english hidden
@@ -1094,10 +1151,10 @@ function renderVocabList(){
     $('vocabList').innerHTML=list.map(vocabRowHtml).join('');
     return;
   }
-  // 有「unit」欄：喺呢個分類入面再按單元分組（保持 Sheet 入面出現嘅次序）
+  // unit 欄（如有）就按 unit 分組
   const groups=[],byUnit={};
   list.forEach((w,i)=>{
-    const u=unitOf(w)||'其他';
+    const u=unitOf(w)||'';
     if(!byUnit[u]){byUnit[u]={label:u,rows:[]};groups.push(byUnit[u]);}
     byUnit[u].rows.push({w,i});
   });
@@ -2340,8 +2397,8 @@ function renderLessonBody(l){
     html+='<div class="lc-section"><div class="lc-label">▶️ 教學影片</div>'+ytLinks.map((url,i)=>'<a class="media-btn youtube" href="'+url+'" target="_blank" rel="noopener"><span class="icon">▶</span><span class="lbl">YouTube'+(ytLinks.length>1?' ('+(i+1)+')':'')+' — '+l.title+'</span><span class="ext">↗</span></a>').join('')+'</div>';
   }
   // 同「詞彙」分頁對返：lesson_id + type（Chapter／Extra／Grammar）+ chapter 一樣就當同一課
-  const cat=vocabCategoryOf(l);
-  const words=S.data.vocab.filter(w=>w.category===cat);
+  const lk=vocabKeyOf(l);
+  const words=S.data.vocab.filter(w=>w._type===lk.type&&w._num===lk.num);
   if(words.length){
     html+='<div class="lc-section"><div class="lc-label">📚 本課詞彙（'+words.length+'）</div><div class="lc-vocab-grid">'
       +words.map(w=>'<div class="lc-vocab-item"><div class="lc-vocab-jyut">'+w.jyutping+'</div><div class="lc-vocab-char">'+w.char+'</div><div class="lc-vocab-thai">'+w.thai+'</div></div>').join('')
@@ -2363,7 +2420,8 @@ window.toggleLesson=key=>{
 };
 window.practiceLessonVocab=key=>{
   const l=S.data.lessons.find(x=>x._key===key);if(!l)return;
-  S.vocabCat=vocabCategoryOf(l);S.vocabIdx=0;
+  const lk=vocabKeyOf(l);
+  S.vocabType=lk.type;S.vocabSub=lk.num===null?'all':lk.num;S.vocabIdx=0;
   buildVocab();showTab('vocab');
 };
 window.tryUnlock=(key)=>{
