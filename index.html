@@ -1205,9 +1205,34 @@ function renderVocabList(){
 window.selectVocab=i=>{S.vocabIdx=i;renderVocab();};
 
 // ── SENTENCE STRUCTURE ────────────────────────────────────────
+// 將「句式」Sheet 拆成一句一句：同一個 pattern_id 底下可以放好多句。
+// 新一句嘅起點 = pattern_id 轉咗，或 example 轉咗，或 part_order 返轉頭（例如 4 → 1）
+const SS_GAME_KEY='重組';   // title 有呢個字嘅 pattern 就當係遊戲題庫
+function ssSentences(){
+  const out=[];
+  let cur=null,lastPid=null,lastOrd=0,lastEx=null;
+  S.data.sentence.forEach(r=>{
+    const pid=String(r.pattern_id||'').trim();
+    if(!pid)return;
+    const ord=+r.part_order||0;
+    const ex=String(r.example||'').trim();
+    const isNew=!cur||pid!==lastPid||(ex&&lastEx&&ex!==lastEx)||(ord>0&&lastOrd>0&&ord<=lastOrd);
+    if(isNew){cur={pid,all:[]};out.push(cur);lastEx=null;}
+    cur.all.push(r);
+    lastPid=pid;if(ord>0)lastOrd=ord;if(ex)lastEx=ex;
+  });
+  return out.map(c=>{
+    const pick=k=>{const r=c.all.find(x=>String(x[k]||'').trim());return r?String(r[k]).trim():'';};
+    const rows=c.all.filter(r=>String(r.text||'').trim()).sort((x,y)=>(+x.part_order||0)-(+y.part_order||0));
+    return {pid:c.pid,title:pick('title'),titleThai:pick('titleThai'),example:pick('example'),jyutping:pick('jyutping'),thai:pick('thai'),rows};
+  });
+}
+function ssIsGame(sen){return String(sen.title||'').indexOf(SS_GAME_KEY)>=0;}
+
 function buildSentence(){
-  const rows=S.data.sentence;
-  const ids=[...new Set(rows.map(r=>r.pattern_id))];
+  const sens=ssSentences();
+  const learnSens=sens.filter(x=>!ssIsGame(x));   // 「重組句子」題庫唔喺學習模式出現
+  const ids=[...new Set(learnSens.map(x=>x.pid))];
   if(!ids.includes(S.ssPatternId))S.ssPatternId=ids[0];
   const mode=$('ssMode');mode.innerHTML='';
   [['learn','📖 學習'],['game','🎮 重組句子']].forEach(([m,label])=>{
@@ -1225,7 +1250,7 @@ function buildSentence(){
   }
   const bar=$('ssFilterBar');bar.innerHTML='';
   ids.forEach(id=>{
-    const meta=rows.find(r=>r.pattern_id===id);
+    const meta=learnSens.find(x=>x.pid===id);
     const btn=h('button','f-btn'+(id===S.ssPatternId?' act':''),meta.title);
     btn.addEventListener('click',()=>{S.ssPatternId=id;renderSentence();bar.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('act'));btn.classList.add('act');});
     bar.appendChild(btn);
@@ -1233,28 +1258,21 @@ function buildSentence(){
   renderSentence();
 }
 function renderSentence(){
-  const rows=S.data.sentence.filter(r=>r.pattern_id===S.ssPatternId);
-  if(!rows.length){$('ssContent').innerHTML='';return;}
-  const meta=rows[0];
-  const tokens=rows.sort((a,b)=>+a.part_order-+b.part_order);
-  $('ssContent').innerHTML='<div class="ss-card"><div style="font-size:12px;color:var(--text-sub);font-family:\'Noto Sans Thai\';margin-bottom:8px">'+meta.titleThai+'</div><div class="ss-ex">'+meta.example+'</div><div class="ss-jyut">'+meta.jyutping+'</div><div class="ss-thai">'+meta.thai+'</div></div><div class="ss-tokens">'+tokens.map(t=>'<div class="ss-tok" style="border-color:'+t.color+'"><div class="tok-role" style="color:'+t.color+'">'+t.role+'</div><div class="tok-char">'+t.text+'</div><div class="tok-jyut">'+t.jyut+'</div><div class="tok-thai">'+t.roleThai+'</div></div>').join('')+'</div>';
+  const list=ssSentences().filter(x=>x.pid===S.ssPatternId&&!ssIsGame(x));
+  if(!list.length){$('ssContent').innerHTML='';return;}
+  $('ssContent').innerHTML=list.map(meta=>'<div class="ss-card"><div style="font-size:12px;color:var(--text-sub);font-family:\'Noto Sans Thai\';margin-bottom:8px">'+meta.titleThai+'</div><div class="ss-ex">'+meta.example+'</div><div class="ss-jyut">'+meta.jyutping+'</div><div class="ss-thai">'+meta.thai+'</div></div><div class="ss-tokens" style="margin-bottom:18px">'+meta.rows.map(t=>'<div class="ss-tok" style="border-color:'+t.color+'"><div class="tok-role" style="color:'+t.color+'">'+t.role+'</div><div class="tok-char">'+t.text+'</div><div class="tok-jyut">'+t.jyut+'</div><div class="tok-thai">'+t.roleThai+'</div></div>').join('')+'</div>').join('');
 }
 
 //  SENTENCE GAME
 const SG={mode:'learn',queue:[],i:0,tokens:[],pool:[],slots:[],tries:0,hint:false,done:false,score:0,marks:null,msg:'',gaveUp:false,finished:false};
-const SG_ROUND=6;
-function ssPatterns(){
-  const byId={};
-  S.data.sentence.forEach(r=>{(byId[r.pattern_id]=byId[r.pattern_id]||[]).push(r);});
-  return Object.keys(byId).map(id=>{
-    const all=byId[id];
-    const rows=all.filter(r=>String(r.text||'').trim()).sort((a,b)=>(+a.part_order||0)-(+b.part_order||0));
-    const pick=k=>{const r=all.find(x=>String(x[k]||'').trim());return r?String(r[k]).trim():'';};
-    return {id,rows,title:pick('title'),thai:pick('thai'),example:pick('example'),jyutping:pick('jyutping')};
-  }).filter(p=>p.rows.length>=2);
+const SG_ROUND=5;
+function ssGamePool(){
+  const all=ssSentences().filter(x=>x.rows.length>=2);
+  const g=all.filter(ssIsGame);
+  return g.length?g:all;   // 有「重組」題庫就淨係用佢，冇就用晒所有句子
 }
 function startSsGame(){
-  SG.queue=shuffle(ssPatterns()).slice(0,SG_ROUND);
+  SG.queue=shuffle(ssGamePool()).slice(0,SG_ROUND);
   SG.i=0;SG.score=0;SG.finished=false;
   if(SG.queue.length)ssNewQuestion();
 }
@@ -1312,7 +1330,7 @@ function renderSsGame(){
   const doneCard=SG.done?'<div class="ss-card" style="margin-top:12px"><div class="ss-ex">'+fullText+'</div><div class="ss-jyut">'+(p.jyutping||'')+'</div><div class="ss-thai">'+(p.thai||'')+'</div></div>':'';
   box.innerHTML='<div class="g-hdr"><span class="score-pill">★ '+SG.score+'</span><span class="round-pill">'+(SG.i+1)+' / '+SG.queue.length+'</span></div>'
     +'<div class="ss-card"><div style="font-size:12px;color:var(--text-sub);margin-bottom:6px">將卡牌排成正確嘅句子 👇</div>'
-    +(p.thai?'<div class="sg-q" style="font-family:\'Noto Sans Thai\'">'+p.thai+'</div>':'<div class="sg-q">'+(p.title||'')+'</div>')
+    +(p.thai?'<div class="sg-q" style="font-family:\'Noto Sans Thai\'">'+p.thai+'</div>':'<div class="sg-q">請排出正確嘅句子</div>')
     +'<div class="sg-tools">'+(Speech.supported?'<button class="sg-mini" onclick="ssSpeak()">🔊 聽句子</button>':'')+'<button class="sg-mini'+(SG.hint?' on':'')+'" onclick="ssHint()">💡 顯示詞性</button></div></div>'
     +'<div class="sg-slots">'+slotsHtml+'</div>'
     +(SG.done?'':'<div class="sg-pool">'+poolHtml+'</div>')
