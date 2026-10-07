@@ -123,7 +123,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
 .fc-face{position:absolute;inset:0;border-radius:16px;backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;border:1.5px solid var(--border);box-shadow:0 2px 10px rgba(0,0,0,0.07)}
 .fc-front{background:var(--surface)}
 .fc-back{background:linear-gradient(135deg,#0E6B57,#0A4D3F);transform:rotateY(180deg);border-color:transparent}
-.fc-jyut{font-family:'Space Mono';color:var(--accent);font-size:15px;margin-bottom:6px;text-align:center}
+.fc-jyut{font-family:'Space Mono';color:var(--accent);font-size:30px;font-weight:700;line-height:1.25;margin-bottom:6px;text-align:center;overflow-wrap:anywhere;padding:0 6px}
 .fc-char{font-family:var(--serif);font-size:44px;font-weight:900;color:var(--text)}
 .fc-hint{font-size:11px;color:var(--text-muted);margin-top:12px}
 .fc-speak-btn{margin-top:12px;background:var(--accent-bg);border:1px solid #c3d9ff;border-radius:8px;padding:5px 14px;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
@@ -297,7 +297,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
 .lc-badge.Chapter{background:#dbeafe;color:#1d4ed8}
 .lc-badge.Grammar{background:#fef3c7;color:#92400e}
 .lc-badge.Extra{background:#d1fae5;color:#065f46}
-.lc-ch{font-size:11px;font-family:'Space Mono';color:var(--text-muted);flex-shrink:0}
+.lc-ch{font-size:12px;font-weight:700;font-family:'Space Mono';color:var(--accent);background:var(--accent-bg);min-width:24px;text-align:center;padding:2px 7px;border-radius:10px;flex-shrink:0}
 .lc-title{font-size:14px;font-weight:600;flex:1;min-width:0}
 .lc-chevron{color:var(--text-muted);font-size:14px;transition:transform .2s;flex-shrink:0}
 .lc-chevron.open{transform:rotate(90deg)}
@@ -695,20 +695,30 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
 </div><!-- /app -->
 
 <script>function parseCSV(text) {
-  const lines = text.trim().split('\n');
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,''));
-  return lines.slice(1).map(line => {
-    const vals = [];
-    let cur = '', inQ = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (ch === '"') { inQ = !inQ; }
-      else if (ch === ',' && !inQ) { vals.push(cur.trim()); cur = ''; }
+  // 逐個字元解析：引號入面可以有逗號、換行（Google Sheet 儲存格內 Alt+Enter），"" 代表一個引號
+  const src = String(text).replace(/^\uFEFF/, '');
+  const rows = [];
+  let row = [], cur = '', inQ = false;
+  for (let i = 0; i < src.length; i++) {
+    const ch = src[i];
+    if (inQ) {
+      if (ch === '"') { if (src[i+1] === '"') { cur += '"'; i++; } else inQ = false; }
       else cur += ch;
-    }
-    vals.push(cur.trim());
+    } else if (ch === '"') inQ = true;
+    else if (ch === ',') { row.push(cur.trim()); cur = ''; }
+    else if (ch === '\n' || ch === '\r') {
+      if (ch === '\r' && src[i+1] === '\n') i++;
+      row.push(cur.trim()); cur = '';
+      rows.push(row); row = [];
+    } else cur += ch;
+  }
+  if (cur !== '' || row.length) { row.push(cur.trim()); rows.push(row); }
+  const lines = rows.filter(r => r.some(v => v !== ''));
+  if (!lines.length) return [];
+  const headers = lines[0].map(h => h.trim());
+  return lines.slice(1).map(vals => {
     const obj = {};
-    headers.forEach((h, i) => obj[h] = (vals[i] || '').replace(/^"|"$/g,''));
+    headers.forEach((h, i) => obj[h] = (vals[i] || ''));
     return obj;
   }).filter(r => Object.values(r).some(v => v));
 }
@@ -1186,6 +1196,7 @@ function normalizeSheetData(){
   // 同一個 lesson_id 可以有 Chapter／Extra／Grammar 幾行，所以用 lesson_id+type 做唯一 key（撞咗就加序號）
   const seen={};
   S.data.lessons.forEach(l=>{
+    l.title=String(l.title||'').replace(/\s*[\r\n]+\s*/g,' ｜ ');
     let k=(String(l.lesson_id||'x')+'_'+String(l.type||'')).toLowerCase().replace(/[^a-z0-9_]+/g,'_');
     if(seen[k]){seen[k]++;k+='_'+seen[k];}else{seen[k]=1;}
     l._key=k;
@@ -1222,8 +1233,7 @@ function renderVocabBars(){
   const bar=$('vocabFilterBar'),sub=$('vocabSubBar');
   bar.innerHTML='';
   vocabTypes().forEach(t=>{
-    const n=S.data.vocab.filter(w=>w._type===t).length;
-    const btn=h('button','f-btn'+(t===S.vocabType?' act':''),t+' ('+n+')');
+    const btn=h('button','f-btn'+(t===S.vocabType?' act':''),t);
     btn.addEventListener('click',()=>{S.vocabType=t;S.vocabSub=defaultSub(t);S.vocabIdx=0;renderVocabBars();renderVocab();});
     bar.appendChild(btn);
   });
@@ -1267,6 +1277,7 @@ function renderCard(){
   }
   $('fcWrap').classList.remove('flip');
   $('fcJyut').textContent=w.jyutping;$('fcChar').textContent=w.char;
+  { const jl=String(w.jyutping||'').length; $('fcJyut').style.fontSize=jl>28?'18px':jl>14?'22px':''; }  // 好長嘅詞組自動縮細啲，唔會爆出卡牌
   $('fcThai').textContent=w.thai;// english hidden
   $('fcCharSm').textContent=w.char;$('fcTone').textContent='tone: '+w.tone;
   $('fcCount').textContent=(S.vocabIdx+1)+' / '+f.length;
@@ -2639,14 +2650,16 @@ function renderLessons(filter){
   S.lessonFilter=filter||'all';
   const lessons=S.data.lessons;
   const filtered=S.lessonFilter==='all'?lessons:lessons.filter(l=>l.type===S.lessonFilter);
-  const sorted=[...filtered].sort((a,b)=>(+a.order||0)-(+b.order||0)||(+a.chapter||0)-(+b.chapter||0));
+  const typeRank=t=>{const i=['chapter','extra','grammar'].indexOf(String(t||'').toLowerCase());return i<0?9:i;};
+  const chNum=l=>{const n=parseInt(String(l.chapter||'').trim(),10);return isNaN(n)?9999:n;};
+  const sorted=filtered.map((l,i)=>({l,i})).sort((x,y)=>chNum(x.l)-chNum(y.l)||typeRank(x.l.type)-typeRank(y.l.type)||(+x.l.order||0)-(+y.l.order||0)||x.i-y.i).map(o=>o.l);
   const total=lessons.length;
   const unlocked=lessons.filter(l=>getLessonUnlocked(l)).length;
   $('lessonProgress').innerHTML='<div class="lesson-progress">已解鎖 '+unlocked+' / '+total+' 個課堂<div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:'+Math.round(unlocked/Math.max(total,1)*100)+'%"></div></div></div>';
   $('lessonList').innerHTML=sorted.map(l=>{
     const un=getLessonUnlocked(l);
     const k=l._key;
-    const chLabel=l.chapter!==undefined&&l.chapter!==''?'Ch'+String(l.chapter).padStart(2,'0'):'';
+    const chLabel=String(l.chapter==null?'':l.chapter).trim();
     return'<div class="lesson-card" id="lcard-'+k+'"><div class="lc-header" onclick="toggleLesson(\''+k+'\')"><span class="lc-badge '+l.type+'">'+l.type+'</span>'+(chLabel?'<span class="lc-ch">'+chLabel+'</span>':'')+'<span class="lc-title">'+l.title+'</span>'+(un?'<span class="lc-chevron" id="chev-'+k+'">›</span>':'<span style="font-size:14px">🔒</span>')+'</div><div class="lc-body" id="lbody-'+k+'">'+(un?renderLessonBody(l):renderUnlockForm(l))+'</div></div>';
   }).join('');
   if(S.openLesson){
