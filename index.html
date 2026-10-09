@@ -425,6 +425,41 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
 @media (hover:hover) and (pointer:fine){.pj-keys{display:inline}}
 @media (max-width:380px){.pj-bowls img{width:54px}.pj-title{font-size:21px}.pj-v{font-size:32px}}
 
+
+/* ── 跟讀評分 ── */
+.fc-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.fc-btns .fc-speak-btn{margin-top:0}
+.fc-mic-btn{background:#fff1ee;border-color:#f3b9ae;color:#c0392b}
+.fc-mic-btn.rec{background:#c0392b;border-color:#c0392b;color:#fff;animation:vrPulse 1.1s ease-in-out infinite}
+@keyframes vrPulse{0%,100%{box-shadow:0 0 0 0 rgba(192,57,43,.5)}50%{box-shadow:0 0 0 8px rgba(192,57,43,0)}}
+.vr-panel{max-width:560px;margin:14px auto 0}
+.vr-card{background:var(--surface,#fff);border:1.5px solid var(--border,#e5e5e5);border-radius:16px;padding:14px 16px}
+.vr-listen{display:flex;align-items:center;gap:8px;justify-content:center;padding:14px;color:var(--text-sub,#666);font-size:14px;background:var(--surface,#fff);border:1.5px dashed var(--border,#ddd);border-radius:14px}
+.vr-dot{width:10px;height:10px;border-radius:50%;background:#c0392b;animation:vrPulse 1.1s ease-in-out infinite}
+.vr-err{padding:12px 14px;border-radius:12px;background:#fdecea;color:#a12b20;font-size:13px}
+.vr-top{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.vr-pct{font-size:44px;font-weight:800;line-height:1;font-family:'Space Mono',monospace}
+.vr-pct small{font-size:18px;margin-left:2px}
+.vr-pct.hi{color:#2e8b57}.vr-pct.mid{color:#d98a1f}.vr-pct.lo{color:#c0392b}
+.vr-stars{font-size:18px}
+.vr-verdict{font-size:14px;font-weight:600}
+.vr-row{display:flex;gap:10px;align-items:flex-start;margin-top:10px}
+.vr-lab{flex:0 0 38px;font-size:12px;color:var(--text-sub,#777);padding-top:6px}
+.vr-chips{display:flex;gap:6px;flex-wrap:wrap}
+.vr-chip{display:inline-flex;flex-direction:column;align-items:center;min-width:46px;padding:4px 8px;border-radius:10px;border:2px solid currentColor;line-height:1.25;font-style:normal}
+.vr-chip b{font-size:20px;color:var(--text,#222)}
+.vr-chip small{font-size:10px;font-family:'Space Mono',monospace;opacity:.85}
+.vr-chip i{font-size:11px;font-style:normal;font-weight:700}
+.c-ok{color:#2e8b57}.c-same{color:#2b7a9b}.c-tone{color:#d98a1f}.c-bad{color:#c0392b}
+.vr-heard{font-size:22px;line-height:2.2;min-height:30px;word-break:break-all}
+.vr-heard ruby{ruby-position:over;margin-right:2px}
+.vr-heard rt{font-size:.5em;color:var(--accent,#0E6B57);font-family:'Space Mono',monospace}
+.vr-tips{margin:10px 0 0;padding-left:18px;font-size:12.5px;color:var(--text-sub,#666)}
+.vr-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.vr-btn{border:0;border-radius:10px;padding:9px 16px;font-size:14px;font-weight:600;background:var(--accent,#0E6B57);color:#fff;cursor:pointer;font-family:inherit}
+.vr-btn.ghost{background:transparent;color:var(--accent,#0E6B57);border:1.5px solid var(--accent,#0E6B57)}
+.vr-legend{font-size:11px;color:var(--text-sub,#777);margin-top:8px;display:flex;gap:10px;flex-wrap:wrap}
+
 /* ══════════════ RESPONSIVE ══════════════ */
 /* 平板／細視窗：置中「卡片」，闊啲，內容分多欄 */
 @media (min-width:720px){
@@ -595,7 +630,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
         <div class="fc-face fc-front" id="fcFront">
           <div class="fc-jyut" id="fcJyut"></div>
           <div class="fc-char" id="fcChar"></div>
-          <button class="fc-speak-btn" id="fcSpeakBtn">▶ 聽發音</button>
+          <div class="fc-btns"><button class="fc-speak-btn" id="fcSpeakBtn">▶ 聽發音</button><button class="fc-speak-btn fc-mic-btn" id="fcMicBtn">🎤 跟我讀</button></div>
           <div class="fc-hint">點一下睇翻譯</div>
         </div>
         <div class="fc-face fc-back" id="fcBack">
@@ -606,6 +641,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
         </div>
       </div>
     </div>
+    <div class="vr-panel" id="vrPanel" style="display:none" aria-live="polite"></div>
     <div class="sec">📋 詞彙列表</div>
     <div class="vocab-list" id="vocabList"></div>
   </div>
@@ -1269,6 +1305,7 @@ function buildVocab() {
 }
 function renderVocab(){renderCard();renderVocabList();}
 function renderCard(){
+  if(window.vrReset)window.vrReset();
   const f=filtered(),w=f[S.vocabIdx];
   if(!w){
     $('fcJyut').textContent='';$('fcChar').textContent='—';$('fcThai').textContent='';
@@ -3024,6 +3061,214 @@ document.addEventListener('keydown',e=>{
 buildDiff();stats();draw();
 window.__pj={DB,say};
 })();
+</script>
+<script>
+const VR=(function(){
+  const HAN=/[\u3400-\u9fff\uf900-\ufaff]/;
+  const LIB_URL='https://cdn.jsdelivr.net/npm/to-jyutping@3.1.1/+esm';
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const ERR={'not-allowed':'請允許使用咪高峰（網址列左邊嘅鎖頭圖示）','service-not-allowed':'呢個頁面唔俾用語音服務','no-speech':'聽唔到聲，請再試','audio-capture':'搵唔到咪高峰','language-not-supported':'呢部機唔支援廣東話辨識，建議用 Chrome 或 Edge','network':'語音辨識需要網絡，請檢查連線','start-failed':'開唔到咪高峰，請再試'};
+  let lib=null,libP=null,lang='yue-Hant-HK';
+
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const isHan=c=>HAN.test(c);
+  const withTimeout=(p,ms)=>Promise.race([p,new Promise(r=>setTimeout(()=>r(null),ms))]);
+
+  // 粵拼字庫：背景載入，唔阻住頁面；失敗就退回「淨係比較文字」
+  function loadLib(){
+    if(lib)return Promise.resolve(lib);
+    if(!libP)libP=import(LIB_URL).then(m=>{lib=(m.default&&m.default.getJyutpingList)?m.default:m;return lib;}).catch(e=>{console.warn('[粵拼字庫] 載入失敗',e);libP=null;return null;});
+    return libP;
+  }
+  // 每個字一個項目 [{c, j}]；j＝粵拼（連聲調），冇就係 ''
+  function chars(text,L){
+    const arr=[...String(text||'')];
+    if(!L||!arr.length)return arr.map(c=>({c,j:''}));
+    try{
+      const out=[];
+      L.getJyutpingList(arr.join('')).forEach(([s,j])=>{
+        const first=j?String(Array.isArray(j)?j[0]:j).split(/\s+/)[0]:'';
+        const cs=[...s];
+        if(cs.length===1)out.push({c:cs[0],j:first});else cs.forEach(c=>out.push({c,j:''}));
+      });
+      if(out.length===arr.length)return out;
+    }catch(e){}
+    return arr.map(c=>({c,j:''}));
+  }
+  const hanChars=(text,L)=>chars(text,L).filter(x=>isHan(x.c));
+
+  // ── 評分：逐個字配對（可以漏字／多字）──
+  // 字一樣＝啱；字唔同但粵拼一樣＝讀音啱；聲母韻母一樣、聲調唔同＝半分；其他＝錯
+  const base=j=>j.replace(/[1-6]$/,'');
+  function pair(t,h){
+    if(t.c===h.c)return{s:1,t:'ok'};
+    if(t.j&&h.j){
+      if(t.j===h.j)return{s:1,t:'same'};
+      if(base(t.j)===base(h.j))return{s:.5,t:'tone'};
+    }
+    return{s:0,t:'bad'};
+  }
+  function align(T,H){
+    const n=T.length,m=H.length;
+    const dp=Array.from({length:n+1},()=>new Float64Array(m+1));
+    for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)
+      dp[i][j]=Math.max(dp[i+1][j],dp[i][j+1],dp[i+1][j+1]+pair(T[i],H[j]).s);
+    const res=T.map(t=>({t,h:null,type:'bad',s:0}));
+    let i=0,j=0;
+    while(i<n&&j<m){
+      const p=pair(T[i],H[j]);
+      if(Math.abs(dp[i][j]-(dp[i+1][j+1]+p.s))<1e-9){res[i]={t:T[i],h:H[j],type:p.t,s:p.s};i++;j++;}
+      else if(dp[i+1][j]>=dp[i][j+1])i++;
+      else j++;
+    }
+    return res;
+  }
+  function scoreOne(T,text,L){
+    const H=hanChars(text,L);
+    const items=align(T,H);
+    const sum=items.reduce((a,x)=>a+x.s,0);
+    return{pct:Math.round(sum/(Math.max(T.length,H.length)||1)*100),items,heard:text,nHeard:H.length};
+  }
+  // alts＝辨識引擎俾嘅幾個候選答案，取得分最高嗰個
+  function score(T,alts,L){
+    let best=null;
+    (alts.length?alts:['']).forEach(a=>{const r=scoreOne(T,a,L);if(!best||r.pct>best.pct)best=r;});
+    return best;
+  }
+  // 目標：中文字 + 粵拼。有 Sheet 粵拼（音節數一樣）就以老師嘅粵拼為準
+  function target(w,L){
+    const arr=hanChars(w.char,L);
+    const toks=String(w.jyutping||'').toLowerCase().match(/[a-z]+[1-6]/g)||[];
+    if(toks.length===arr.length)arr.forEach((x,i)=>{x.j=toks[i];});
+    return arr;
+  }
+  function verdict(p){
+    return p>=90?['🌟🌟🌟','好叻！讀得好清楚']:p>=70?['🌟🌟','幾好，再清楚啲就更好']:p>=40?['🌟','有進步空間，留意橙色同紅色嘅字']:['💪','再試一次，講慢啲、咬字清楚啲'];
+  }
+  function tips(items,hasLib){
+    const out=[];
+    items.forEach(x=>{
+      if(x.type==='tone'&&x.h)out.push('「'+x.t.c+'」應該係 '+x.t.j+'，聽落似 '+x.h.j+'（聲調唔同）');
+      else if(x.type==='bad'&&x.h)out.push('「'+x.t.c+'」聽成「'+x.h.c+'」'+(x.h.j?'（'+x.h.j+'）':''));
+      else if(x.type==='bad')out.push('漏咗或者聽唔清「'+x.t.c+'」');
+    });
+    if(!hasLib)out.push('粵拼字庫未載入到，今次只比較文字，唔計聲調。');
+    return out.slice(0,5);
+  }
+  const MARK={ok:'✓',same:'✓',tone:'▲',bad:'✗'};
+  const LABEL={ok:'啱',same:'讀音啱',tone:'聲調唔準',bad:'錯／漏'};
+  function chip(x){
+    return '<span class="vr-chip c-'+x.type+'" title="'+LABEL[x.type]+'"><b>'+esc(x.t.c)+'</b><small>'+esc(x.t.j||'')+'</small><i>'+MARK[x.type]+'</i></span>';
+  }
+  // 逐字配粵拼嘅 ruby HTML；classAt(第幾個漢字) 決定顏色 class
+  function ruby(text,L,classAt,fmt){
+    let hi=0;
+    return chars(text,L).map(x=>{
+      if(!isHan(x.c))return esc(x.c);
+      const cls=classAt?(classAt(hi)||''):'';hi++;
+      const rt=x.j?(fmt?fmt(x.j):x.j):'';
+      return rt?'<ruby class="'+cls+'">'+esc(x.c)+'<rt>'+esc(rt)+'</rt></ruby>':'<span class="'+cls+'">'+esc(x.c)+'</span>';
+    }).join('');
+  }
+
+  // ── 語音辨識：先試 yue-Hant-HK，唔支援（例如 Safari）就自動轉 zh-HK ──
+  function listen(o){
+    const st={rec:null,dead:false,retry:false};
+    const ctl={
+      stop(){try{st.rec&&st.rec.stop();}catch(e){}},
+      abort(){st.dead=true;try{st.rec&&st.rec.abort();}catch(e){}}
+    };
+    function begin(){
+      const rec=new SR();st.rec=rec;
+      rec.lang=lang;rec.continuous=!!o.continuous;rec.interimResults=true;rec.maxAlternatives=o.maxAlt||1;
+      rec.onstart=()=>{if(!st.dead&&o.onStart)o.onStart();};
+      rec.onresult=e=>{if(!st.dead&&o.onResult)o.onResult(e);};
+      rec.onerror=e=>{
+        if(st.dead)return;
+        if(e.error==='language-not-supported'&&lang==='yue-Hant-HK'){lang='zh-HK';st.retry=true;return;}
+        if(e.error==='aborted')return;
+        if(o.onError)o.onError(e.error);
+      };
+      rec.onend=()=>{
+        if(st.dead)return;
+        if(st.retry){st.retry=false;begin();return;}
+        if(o.onEnd)o.onEnd();
+      };
+      try{rec.start();}catch(err){if(o.onError)o.onError('start-failed');if(o.onEnd)o.onEnd();}
+    }
+    begin();
+    return ctl;
+  }
+  return{supported:!!SR,ERR,esc,isHan,loadLib,withTimeout,chars,hanChars,score,target,verdict,tips,chip,ruby,listen,align,pair};
+})();
+
+
+(function(){
+  const btn=document.getElementById('fcMicBtn'),panel=document.getElementById('vrPanel');
+  if(!btn||!panel||typeof VR==='undefined')return;
+  let ctl=null,busy=false,session=0,timer=null,lastL=null;
+  const show=h=>{panel.style.display='';panel.innerHTML=h;};
+  const hide=()=>{panel.style.display='none';panel.innerHTML='';};
+  const curWord=()=>{const f=filtered();return f[S.vocabIdx]||null;};
+  function stopAll(){session++;clearTimeout(timer);if(ctl){try{ctl.abort();}catch(e){}ctl=null;}busy=false;btn.classList.remove('rec');}
+  window.vrReset=function(){stopAll();hide();};     // 換咗張卡就清走上一個結果
+
+  function renderResult(w,r,L){
+    const v=VR.verdict(r.pct),cls=r.pct>=80?'hi':r.pct>=50?'mid':'lo';
+    const types=r.items.map(x=>x.type);
+    const heard=r.heard?VR.ruby(r.heard,L,null):'<span style="color:var(--text-muted,#999);font-size:14px">（聽唔到）</span>';
+    const tips=VR.tips(r.items,!!L);
+    return '<div class="vr-card">'
+      +'<div class="vr-top"><div class="vr-pct '+cls+'">'+r.pct+'<small>%</small></div><div><div class="vr-stars">'+v[0]+'</div><div class="vr-verdict">'+v[1]+'</div></div></div>'
+      +'<div class="vr-row"><span class="vr-lab">目標</span><div class="vr-chips">'+r.items.map(VR.chip).join('')+'</div></div>'
+      +'<div class="vr-row"><span class="vr-lab">聽到</span><div class="vr-heard">'+heard+'</div></div>'
+      +'<div class="vr-legend"><span class="c-ok">✓ 啱</span><span class="c-same">✓ 讀音啱（字唔同）</span><span class="c-tone">▲ 聲調唔準</span><span class="c-bad">✗ 錯／漏</span></div>'
+      +(tips.length?'<ul class="vr-tips">'+tips.map(t=>'<li>'+VR.esc(t)+'</li>').join('')+'</ul>':'')
+      +'<div class="vr-actions"><button class="vr-btn" data-act="again">🎤 再讀一次</button><button class="vr-btn ghost" data-act="hear">▶ 聽標準讀音</button></div></div>';
+  }
+  function err(msg){show('<div class="vr-err">'+VR.esc(msg)+'</div><div class="vr-actions"><button class="vr-btn" data-act="again">🎤 再試一次</button></div>');}
+
+  function start(){
+    if(busy){if(ctl)ctl.stop();return;}                 // 讀緊再撳＝提早停止
+    const w=curWord();if(!w)return;
+    if(!VR.supported){err('呢個瀏覽器唔支援語音辨識，請用 Chrome、Edge 或 Safari。');return;}
+    try{if(window.speechSynthesis)speechSynthesis.cancel();}catch(e){}   // 唔好俾 App 自己把聲收入咪
+    VR.loadLib();                                        // 同時喺背景載入粵拼字庫
+    stopAll();const my=session;busy=true;
+    let alts=[],interim='',error='';
+    const listening=extra=>show('<div class="vr-listen"><span class="vr-dot"></span><span>聽緊…請讀出「<b>'+VR.esc(w.char)+'</b>」'+(extra?'　<span style="opacity:.6">'+VR.esc(extra)+'</span>':'')+'</span></div>');
+    listening('');btn.classList.add('rec');
+    ctl=VR.listen({
+      continuous:false,maxAlt:3,
+      onResult(e){
+        if(my!==session)return;
+        const res=e.results[e.results.length-1];
+        const list=[...res].map(a=>a.transcript.trim()).filter(Boolean);
+        if(res.isFinal)alts=list;else{interim=list[0]||'';listening(interim);}
+      },
+      onError(code){if(my===session)error=code;},
+      async onEnd(){
+        if(my!==session)return;
+        clearTimeout(timer);busy=false;btn.classList.remove('rec');ctl=null;
+        if(error){err(VR.ERR[error]||('出錯：'+error));return;}
+        if(!alts.length&&interim)alts=[interim];
+        if(!alts.length){err('冇聽到你讀嘢，請再試一次（靠近啲咪高峰、讀清楚啲）。');return;}
+        const L=await VR.withTimeout(VR.loadLib(),4000);
+        if(my!==session||curWord()!==w)return;         // 期間轉咗卡就唔顯示
+        lastL=L;
+        show(renderResult(w,VR.score(VR.target(w,L),alts,L),L));
+      }
+    });
+    timer=setTimeout(()=>{if(ctl)ctl.stop();},9000);    // 最長 9 秒自動停
+  }
+  btn.addEventListener('click',e=>{e.stopPropagation();start();});
+  panel.addEventListener('click',e=>{
+    const b=e.target.closest('[data-act]');if(!b)return;
+    if(b.dataset.act==='again')start();
+    else if(b.dataset.act==='hear'){const w=curWord();if(w&&typeof Speech!=='undefined')Speech.speak(w.char);}
+  });
+})();
+
 </script>
 </body>
 </html>
