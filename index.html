@@ -3067,8 +3067,13 @@ const VR=(function(){
   const HAN=/[\u3400-\u9fff\uf900-\ufaff]/;
   const LIB_URL='https://cdn.jsdelivr.net/npm/to-jyutping@3.1.1/+esm';
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  const ERR={'not-allowed':'請允許使用咪高峰（網址列左邊嘅鎖頭圖示）','service-not-allowed':'呢個頁面唔俾用語音服務','no-speech':'聽唔到聲，請再試','audio-capture':'搵唔到咪高峰','language-not-supported':'呢部機唔支援廣東話辨識，建議用 Chrome 或 Edge','network':'語音辨識需要網絡，請檢查連線','start-failed':'開唔到咪高峰，請再試'};
-  let lib=null,libP=null,lang='yue-Hant-HK';
+  const UA=(navigator.userAgent||'');
+  // iPhone／iPad／Mac Safari 用 zh-HK（Apple 嘅廣東話聽寫）；Chrome／Edge 用 yue-Hant-HK
+  const APPLE=/iPhone|iPad|iPod/.test(UA)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)||(/Safari/.test(UA)&&!/Chrome|Chromium|CriOS|Edg|OPR|Android|Firefox/.test(UA));
+  const LANGS=APPLE?['zh-HK','yue-Hant-HK']:['yue-Hant-HK','zh-HK'];
+  const CFG={startMs:6000,stopMs:2500};          // 6 秒內未開始收音／撳停止後 2.5 秒未收尾，就當辨識冇反應
+  const ERR={'not-allowed':'請允許使用咪高峰（網址列左邊嘅鎖頭圖示）','service-not-allowed':'呢部機未開語音辨識：iPhone 請去「設定 → 一般 → 鍵盤」開啟「啟用聽寫」，並允許 Safari 使用語音辨識','no-speech':'聽唔到聲，請再試','audio-capture':'搵唔到咪高峰','language-not-supported':'呢部機唔支援廣東話辨識，建議用 Chrome 或 Edge','network':'語音辨識需要網絡，請檢查連線','start-failed':'開唔到咪高峰，請再試','no-response':'語音辨識冇反應：請確認已允許咪高峰同語音辨識（iPhone 要喺「設定 → 一般 → 鍵盤」開啟「啟用聽寫」），然後再試一次'};
+  let lib=null,libP=null,langIdx=0;
 
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const isHan=c=>HAN.test(c);
@@ -3171,35 +3176,64 @@ const VR=(function(){
     }).join('');
   }
 
-  // ── 語音辨識：先試 yue-Hant-HK，唔支援（例如 Safari）就自動轉 zh-HK ──
+  // ── 語音辨識：按平台揀語言、自動換語言重試、冇反應就逾時收尾（唔會一直卡喺「聽緊」）──
+  function diag(ev){
+    const f=x=>x?'✓':'✗';
+    return (ev.lang||'-')+' · 啟動'+f(ev.start)+' 收音'+f(ev.audio)+' 有聲'+f(ev.sound)+' 語音'+f(ev.speech)+' 結果'+f(ev.result);
+  }
   function listen(o){
-    const st={rec:null,dead:false,retry:false};
+    const ev={start:false,audio:false,sound:false,speech:false,result:false,lang:''};
+    const st={rec:null,dead:false,ended:false,retry:false,startT:null,stopT:null,errT:null};
+    function clearT(){clearTimeout(st.startT);clearTimeout(st.stopT);clearTimeout(st.errT);}
+    function finish(forced){
+      if(st.dead||st.ended)return;
+      st.ended=true;clearT();
+      if(o.onEnd)o.onEnd(ev,!!forced);
+    }
     const ctl={
-      stop(){try{st.rec&&st.rec.stop();}catch(e){}},
-      abort(){st.dead=true;try{st.rec&&st.rec.abort();}catch(e){}}
+      ev,
+      stop(){
+        try{st.rec&&st.rec.stop();}catch(e){}
+        clearTimeout(st.stopT);st.stopT=setTimeout(()=>finish(true),CFG.stopMs);   // stop 之後冇收尾就強制收尾
+      },
+      abort(){st.dead=true;clearT();try{st.rec&&st.rec.abort();}catch(e){}}
     };
     function begin(){
+      const L=LANGS[langIdx];ev.lang=L;
       const rec=new SR();st.rec=rec;
-      rec.lang=lang;rec.continuous=!!o.continuous;rec.interimResults=true;rec.maxAlternatives=o.maxAlt||1;
-      rec.onstart=()=>{if(!st.dead&&o.onStart)o.onStart();};
-      rec.onresult=e=>{if(!st.dead&&o.onResult)o.onResult(e);};
+      rec.lang=L;rec.continuous=!!o.continuous;rec.interimResults=true;rec.maxAlternatives=o.maxAlt||1;
+      rec.onstart=()=>{ev.start=true;clearTimeout(st.startT);if(!st.dead&&o.onStart)o.onStart();};
+      rec.onaudiostart=()=>{ev.audio=true;};
+      rec.onsoundstart=()=>{ev.sound=true;};
+      rec.onspeechstart=()=>{ev.speech=true;};
+      rec.onresult=e=>{ev.result=true;if(!st.dead&&o.onResult)o.onResult(e);};
       rec.onerror=e=>{
-        if(st.dead)return;
-        if(e.error==='language-not-supported'&&lang==='yue-Hant-HK'){lang='zh-HK';st.retry=true;return;}
-        if(e.error==='aborted')return;
+        if(st.dead||st.ended||e.error==='aborted')return;
+        if(e.error==='language-not-supported'&&langIdx<LANGS.length-1){langIdx++;st.retry=true;return;}   // 等 onend 再用下一個語言重試
         if(o.onError)o.onError(e.error);
+        clearTimeout(st.errT);st.errT=setTimeout(()=>finish(true),1500);                                    // 有啲瀏覽器出錯後唔會觸發 onend
       };
       rec.onend=()=>{
         if(st.dead)return;
         if(st.retry){st.retry=false;begin();return;}
-        if(o.onEnd)o.onEnd();
+        finish(false);
       };
-      try{rec.start();}catch(err){if(o.onError)o.onError('start-failed');if(o.onEnd)o.onEnd();}
+      // 啟動 watchdog：一直收唔到 start 事件（常見於 iPhone 語言／聽寫未開）就換語言，仍然冇就報錯
+      clearTimeout(st.startT);
+      st.startT=setTimeout(()=>{
+        if(ev.start||st.dead||st.ended)return;
+        rec.onend=rec.onerror=rec.onresult=rec.onstart=null;
+        try{rec.abort();}catch(e){}
+        if(langIdx<LANGS.length-1){langIdx++;begin();return;}
+        if(o.onError)o.onError('no-response');
+        finish(true);
+      },CFG.startMs);
+      try{rec.start();}catch(err){clearTimeout(st.startT);if(o.onError)o.onError('start-failed');finish(true);}
     }
     begin();
     return ctl;
   }
-  return{supported:!!SR,ERR,esc,isHan,loadLib,withTimeout,chars,hanChars,score,target,verdict,tips,chip,ruby,listen,align,pair};
+  return{supported:!!SR,ERR,CFG,diag,LANGS,esc,isHan,loadLib,withTimeout,chars,hanChars,score,target,verdict,tips,chip,ruby,listen,align,pair};
 })();
 
 
@@ -3213,11 +3247,10 @@ const VR=(function(){
   function stopAll(){session++;clearTimeout(timer);if(ctl){try{ctl.abort();}catch(e){}ctl=null;}busy=false;btn.classList.remove('rec');}
   window.vrReset=function(){stopAll();hide();};     // 換咗張卡就清走上一個結果
 
-  function renderResult(w,r,L){
+  function renderResult(w,r,L,note){
     const v=VR.verdict(r.pct),cls=r.pct>=80?'hi':r.pct>=50?'mid':'lo';
-    const types=r.items.map(x=>x.type);
-    const heard=r.heard?VR.ruby(r.heard,L,null):'<span style="color:var(--text-muted,#999);font-size:14px">（聽唔到）</span>';
-    const tips=VR.tips(r.items,!!L);
+    const heard=r.heard?VR.ruby(r.heard,L,null):'<span style="color:var(--text-muted,#999);font-size:14px">（辨識唔到）</span>';
+    const tips=note?[note]:VR.tips(r.items,!!L);
     return '<div class="vr-card">'
       +'<div class="vr-top"><div class="vr-pct '+cls+'">'+r.pct+'<small>%</small></div><div><div class="vr-stars">'+v[0]+'</div><div class="vr-verdict">'+v[1]+'</div></div></div>'
       +'<div class="vr-row"><span class="vr-lab">目標</span><div class="vr-chips">'+r.items.map(VR.chip).join('')+'</div></div>'
@@ -3226,7 +3259,9 @@ const VR=(function(){
       +(tips.length?'<ul class="vr-tips">'+tips.map(t=>'<li>'+VR.esc(t)+'</li>').join('')+'</ul>':'')
       +'<div class="vr-actions"><button class="vr-btn" data-act="again">🎤 再讀一次</button><button class="vr-btn ghost" data-act="hear">▶ 聽標準讀音</button></div></div>';
   }
-  function err(msg){show('<div class="vr-err">'+VR.esc(msg)+'</div><div class="vr-actions"><button class="vr-btn" data-act="again">🎤 再試一次</button></div>');}
+  function err(msg,ev){
+    show('<div class="vr-err">'+VR.esc(msg)+(ev?'<div style="margin-top:6px;font-size:11px;opacity:.7">診斷：'+VR.esc(VR.diag(ev))+'</div>':'')+'</div><div class="vr-actions"><button class="vr-btn" data-act="again">🎤 再試一次</button></div>');
+  }
 
   function start(){
     if(busy){if(ctl)ctl.stop();return;}                 // 讀緊再撳＝提早停止
@@ -3236,30 +3271,41 @@ const VR=(function(){
     VR.loadLib();                                        // 同時喺背景載入粵拼字庫
     stopAll();const my=session;busy=true;
     let alts=[],interim='',error='';
-    const listening=extra=>show('<div class="vr-listen"><span class="vr-dot"></span><span>聽緊…請讀出「<b>'+VR.esc(w.char)+'</b>」'+(extra?'　<span style="opacity:.6">'+VR.esc(extra)+'</span>':'')+'</span></div>');
-    listening('');btn.classList.add('rec');
+    const note=(html)=>show('<div class="vr-listen"><span class="vr-dot"></span><span>'+html+'</span></div>');
+    note('準備緊咪高峰…');btn.classList.add('rec');
     ctl=VR.listen({
       continuous:false,maxAlt:3,
+      onStart(){
+        if(my!==session)return;
+        note('聽緊…請讀出「<b>'+VR.esc(w.char)+'</b>」');
+        timer=setTimeout(()=>{if(ctl)ctl.stop();},8000);  // 開始收音後最長 8 秒自動停
+      },
       onResult(e){
         if(my!==session)return;
         const res=e.results[e.results.length-1];
-        const list=[...res].map(a=>a.transcript.trim()).filter(Boolean);
-        if(res.isFinal)alts=list;else{interim=list[0]||'';listening(interim);}
+        const list=[];for(let i=0;i<res.length;i++){const t=(res[i].transcript||'').trim();if(t)list.push(t);}
+        if(res.isFinal)alts=list;else{interim=list[0]||'';note('聽緊…請讀出「<b>'+VR.esc(w.char)+'</b>」　<span style="opacity:.6">'+VR.esc(interim)+'</span>');}
       },
       onError(code){if(my===session)error=code;},
-      async onEnd(){
+      async onEnd(ev){
         if(my!==session)return;
         clearTimeout(timer);busy=false;btn.classList.remove('rec');ctl=null;
-        if(error){err(VR.ERR[error]||('出錯：'+error));return;}
+        if(error){err(VR.ERR[error]||('出錯：'+error),ev);return;}
         if(!alts.length&&interim)alts=[interim];
-        if(!alts.length){err('冇聽到你讀嘢，請再試一次（靠近啲咪高峰、讀清楚啲）。');return;}
         const L=await VR.withTimeout(VR.loadLib(),4000);
-        if(my!==session||curWord()!==w)return;         // 期間轉咗卡就唔顯示
-        lastL=L;
-        show(renderResult(w,VR.score(VR.target(w,L),alts,L),L));
+        if(my!==session||curWord()!==w)return;           // 期間轉咗卡就唔顯示
+        const T=VR.target(w,L);
+        if(!alts.length){
+          if(!ev.start){err(VR.ERR['no-response'],ev);return;}
+          if(ev.sound||ev.speech){                        // 聽到有出聲，但引擎辨識唔到係咩字 → 當讀得唔清楚，計 0 分
+            show(renderResult(w,VR.score(T,[],L),L,'系統聽到你出聲，但辨識唔到係「'+w.char+'」。通常係聲調或者咬字同標準差好遠，聽多一次標準讀音再試。'));
+            return;
+          }
+          err('聽唔到你嘅聲音，請靠近啲咪高峰、讀大聲啲再試。',ev);return;
+        }
+        show(renderResult(w,VR.score(T,alts,L),L));
       }
     });
-    timer=setTimeout(()=>{if(ctl)ctl.stop();},9000);    // 最長 9 秒自動停
   }
   btn.addEventListener('click',e=>{e.stopPropagation();start();});
   panel.addEventListener('click',e=>{
