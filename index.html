@@ -49,6 +49,10 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
 .tab-btn{flex-shrink:0;padding:9px 14px;border:none;background:transparent;color:rgba(255,255,255,.65);font-size:13px;font-family:inherit;cursor:pointer;border-bottom:2.5px solid transparent;transition:all .15s;white-space:nowrap;font-weight:500}
 .tab-btn.act{color:#fff;border-bottom-color:#F4D58D;font-weight:700}
 
+/* 分頁／主頁卡片標題旁嘅粵拼 */
+.tab-btn .tj{display:block;font-size:10px;font-weight:400;opacity:.8;letter-spacing:.2px;margin-top:1px;font-family:'Nunito','Noto Sans TC',sans-serif;text-align:center}
+.nav-jp{margin-left:8px;font-size:12px;font-weight:600;color:var(--accent);font-family:'Nunito','Noto Sans TC',sans-serif;letter-spacing:.2px}
+@media (min-width:1100px){.tab-btn .tj{display:inline;margin:0 0 0 8px;font-size:12px}}
 /* ── LOADING ── */
 .loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:12px;color:var(--text-sub)}
 .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
@@ -625,6 +629,101 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
   .vocab-list{grid-template-columns:repeat(4,1fr)}
   #navCards{grid-template-columns:repeat(4,1fr)}
 }
+/* ══ 課堂測驗（一）：全部加 qz- 前綴同 #qz-root 範圍，唔影響其他分頁 ══ */
+#page-quiz{max-width:800px;margin-left:auto;margin-right:auto}
+#qz-root{--jade:#1f6f5b;--jade-d:#14513f;--red:#c8382b;--gold:#c9a227;--card:#fffdf7;--ink:#26231d;--mute:#7a7466;--line:#e2d9c3;color:var(--ink);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#qz-root input{-webkit-user-select:text;user-select:text}
+#qz-root .qz-th{font-family:'Noto Sans Thai',sans-serif}
+#qz-root .qz-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:0 2px 0 var(--line)}
+#qz-root .qz-sec{font:900 20px 'Noto Serif TC',serif;color:var(--jade-d);margin:26px 0 4px;display:flex;align-items:center;gap:8px}
+#qz-root .qz-sec::before{content:"";width:6px;height:22px;background:var(--red);border-radius:2px}
+#qz-root .qz-sub{color:var(--mute);font-size:13px;margin:0 0 12px}
+#qz-root .qz-nm{font-weight:700;display:block;margin-bottom:6px}
+#qz-root input[type=text]{width:100%;padding:12px;font-size:16px;border:2px solid var(--line);border-radius:10px;background:#fff;font-family:inherit}
+#qz-root input[type=text]:focus{outline:none;border-color:var(--jade)}
+#qz-root ruby{ruby-position:over}
+#qz-root rt{font:500 .5em 'Noto Sans TC',sans-serif;color:var(--mute);letter-spacing:.02em}
+#qz-root .qz-zh{font-family:'Noto Serif TC',serif;font-weight:700}
+#qz-root .qz-btns{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 14px}
+#qz-root .qz-btn{border:0;border-radius:10px;padding:12px 16px;font:700 15px 'Noto Sans TC',sans-serif;cursor:pointer;background:var(--jade);color:#fff}
+#qz-root .qz-btn.slow{background:var(--gold);color:#2b2200}
+#qz-root .qz-btn.big{width:100%;background:var(--red);font-size:17px;padding:15px}
+#qz-root .qz-btn.ghost{background:#fff;color:var(--jade-d);border:2px solid var(--jade)}
+#qz-root .qz-btn:disabled{opacity:.45;cursor:not-allowed}
+#qz-root .qz-q{padding:14px 0;border-top:1px dashed var(--line)}
+#qz-root .qz-q:first-of-type{border-top:0}
+#qz-root .qz-qt{font-weight:700;margin-bottom:8px}
+#qz-root .qz-qt small{display:block;color:var(--mute);font-weight:400}
+#qz-root .qz-opts{display:grid;grid-template-columns:1fr;gap:8px}
+#qz-root .qz-opt{text-align:left;border:2px solid var(--line);background:#fff;border-radius:10px;padding:11px 12px;font-size:15px;cursor:pointer;font-family:inherit;color:inherit}
+#qz-root .qz-opt.on{border-color:var(--jade);background:#e3f2ec;font-weight:700}
+#qz-root .qz-vq .qz-big{font-size:30px;text-align:center;padding:8px 0 14px}
+#qz-root .qz-num{color:var(--red);font-weight:800;margin-right:6px}
+#qz-root .qz-thai-s{background:#fff4d6;border-left:4px solid var(--gold);padding:8px 10px;border-radius:6px;margin-bottom:10px;font-size:15px}
+#qz-root .qz-ans{min-height:84px;border:2px dashed var(--jade);border-radius:12px;padding:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:flex-end;background:#f2faf6}
+#qz-root .qz-ans:empty::before{content:"撳下面嘅字塊，砌返句句子 · แตะคำด้านล่างเพื่อเรียงประโยค";color:var(--mute);font-size:13px;align-self:center}
+#qz-root .qz-pool{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:60px}
+#qz-root .qz-tile{border:2px solid var(--line);border-bottom-width:4px;background:#fff;border-radius:10px;padding:14px 10px 4px;font-size:20px;cursor:pointer;text-align:center;font-family:'Noto Serif TC',serif;font-weight:700;color:var(--ink);position:relative}
+#qz-root .qz-tile .qz-pos{display:block;font:500 10px 'Noto Sans TC',sans-serif;margin-top:2px;padding:0 4px;border-radius:4px;color:#fff;background:#888}
+#qz-root .qz-tile.p-名詞 .qz-pos{background:var(--jade)}#qz-root .qz-tile.p-動詞 .qz-pos{background:var(--red)}#qz-root .qz-tile.p-形容詞 .qz-pos{background:var(--gold);color:#222}#qz-root .qz-tile.p-數量 .qz-pos{background:#2f5d8a}
+#qz-root .qz-rs{font-size:12px;color:var(--mute);margin-top:6px;text-align:right}
+#qz-root .qz-note{font-size:12px;color:var(--mute);text-align:center;margin-top:10px}
+#qz-root .qz-err{background:#fde7e4;color:#8a1f15;border-radius:12px;padding:16px;text-align:center;margin-bottom:12px}
+#qz-root .qz-ok{background:#e3f2ec;color:var(--jade-d);border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:14px}
+#qz-root .qz-intro h2{font:900 22px 'Noto Serif TC',serif;margin:0 0 4px;color:var(--jade-d)}
+#qz-root .qz-intro ul{margin:10px 0 14px;padding-left:20px;font-size:14px;line-height:1.9}
+#qz-root .qz-tbl{border-collapse:collapse;width:100%;font-size:13px}#qz-root .qz-tbl td,#qz-root .qz-tbl th{border:1px solid var(--line);padding:4px 6px;text-align:left}
+/* 提交後：唯讀試卷 */
+#qz-root.qz-pm{background:#525659;border-radius:16px;padding:0 0 16px;overflow:hidden}
+#qz-root .qz-vbar{background:#323639;color:#e8eaed;display:flex;align-items:center;gap:10px;padding:8px 12px;font-size:13px;flex-wrap:wrap}
+#qz-root .qz-vbar .qz-fn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+#qz-root .qz-vbar .qz-st{font-size:12px;padding:3px 8px;border-radius:6px}
+#qz-root .qz-st.ok{background:#1f6f5b}#qz-root .qz-st.bad{background:#a32a1f}#qz-root .qz-st.wait{background:#7a6a1c}
+#qz-root .qz-vbar button{background:#555a5e;color:#fff;border:0;border-radius:6px;padding:6px 10px;font:600 12px 'Noto Sans TC',sans-serif;cursor:pointer;white-space:nowrap}
+#qz-root .qz-paper{background:#fff;color:#111;max-width:794px;margin:16px auto 0;padding:36px 40px 48px;box-shadow:0 4px 18px rgba(0,0,0,.5);font-family:'Noto Serif TC','Noto Sans Thai',serif}
+#qz-root .qz-paper h2{font:900 24px 'Noto Serif TC',serif;margin:0 0 2px;text-align:center}
+#qz-root .qz-en{text-align:center;color:#555;font:14px 'Noto Sans Thai',sans-serif;margin-bottom:18px}
+#qz-root .qz-meta{display:flex;justify-content:space-between;gap:16px;border-top:2px solid #111;border-bottom:1px solid #999;padding:10px 0;font:14px 'Noto Sans TC',sans-serif;flex-wrap:wrap}
+#qz-root .qz-scorebox{display:flex;align-items:center;gap:18px;margin:18px 0 8px;flex-wrap:wrap}
+#qz-root .qz-stamp{border:4px solid var(--red);color:var(--red);border-radius:14px;padding:6px 18px;transform:rotate(-4deg);font:900 40px 'Noto Serif TC',serif;line-height:1.2;text-align:center}
+#qz-root .qz-stamp small{display:block;font:700 12px 'Noto Sans TC',sans-serif;letter-spacing:.1em}
+#qz-root .qz-parts{font:14px 'Noto Sans TC',sans-serif;line-height:1.9}
+#qz-root .qz-parts span{display:inline-block;min-width:120px}
+#qz-root .qz-psec{font:900 18px 'Noto Serif TC',serif;margin:26px 0 8px;padding-bottom:4px;border-bottom:2px solid #111;display:flex;justify-content:space-between;align-items:baseline}
+#qz-root .qz-psec small{font:700 13px 'Noto Sans TC',sans-serif;color:#444}
+#qz-root .qz-pq{border-left:5px solid #ccc;padding:8px 12px;margin:10px 0;break-inside:avoid;background:#fafafa}
+#qz-root .qz-pq.right{border-left-color:#1f8a4c}#qz-root .qz-pq.wrong{border-left-color:var(--red);background:#fff6f5}
+#qz-root .qz-pqh{font-weight:700;display:flex;gap:8px;align-items:baseline}
+#qz-root .qz-pqh small{font:400 12px 'Noto Sans Thai',sans-serif;color:#666;margin-left:4px}
+#qz-root .qz-mk{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;color:#fff;font:700 14px sans-serif;flex:none}
+#qz-root .qz-mk.ok{background:#1f8a4c}#qz-root .qz-mk.no{background:var(--red)}
+#qz-root .qz-po{list-style:none;margin:6px 0 0;padding:0;font:15px 'Noto Sans Thai','Noto Sans TC',sans-serif}
+#qz-root .qz-po li{padding:3px 8px;border-radius:6px}
+#qz-root .qz-po li.corr{background:#dff3e6;font-weight:700}
+#qz-root .qz-po li.bad{background:#fbd9d5;text-decoration:line-through}
+#qz-root .qz-po li .qz-tag{font-size:11px;font-weight:700;margin-left:6px;text-decoration:none;display:inline-block}
+#qz-root .qz-po li.bad .qz-tag{color:var(--red)}#qz-root .qz-po li.corr .qz-tag{color:#1f6f3d}
+#qz-root .qz-vw{font:700 26px 'Noto Serif TC',serif;text-align:center;padding:6px 0 10px}
+#qz-root .qz-ch{font:600 11px 'Noto Sans TC',sans-serif;color:#666;border:1px solid #bbb;border-radius:4px;padding:0 5px;margin-left:6px}
+#qz-root .qz-srow{margin-top:6px;display:flex;gap:8px;align-items:flex-start;font:14px 'Noto Sans TC',sans-serif}
+#qz-root .qz-srow>b{flex:none;width:72px;padding-top:12px}
+#qz-root .qz-stiles{display:flex;flex-wrap:wrap;gap:4px;padding:8px;border-radius:8px;flex:1;font:700 19px 'Noto Serif TC',serif}
+#qz-root .qz-stiles.good,#qz-root .qz-stiles.ans-ok{background:#dff3e6}#qz-root .qz-stiles.mine-bad{background:#fbd9d5}
+#qz-root .qz-stile{border:1px solid #bbb;background:#fff;border-radius:6px;padding:8px 6px 2px}
+#qz-root .qz-thp{font:14px 'Noto Sans Thai',sans-serif;background:#fff4d6;border-left:4px solid var(--gold);padding:5px 8px;margin:6px 0}
+#qz-root .qz-foot{text-align:center;color:#777;font:12px 'Noto Sans TC',sans-serif;margin-top:30px;border-top:1px solid #ccc;padding-top:10px}
+@media(max-width:640px){#qz-root .qz-vbar .qz-fn{display:none}#qz-root .qz-vbar .qz-st{flex:1}#qz-root .qz-paper{margin:0 auto;padding:22px 16px 40px;box-shadow:none}#qz-root .qz-stamp{font-size:32px}#qz-root .qz-srow{flex-direction:column}#qz-root .qz-srow>b{width:auto;padding-top:0}}
+/* 頭部倒數 */
+#qz-timer{font-family:'Space Mono',monospace}
+#qz-timer.qz-warn{background:#C0392B;color:#fff;border-color:#fff;animation:qzPulse 1s infinite}
+@keyframes qzPulse{50%{opacity:.6}}
+/* 列印：只印試卷 */
+body.qz-print .hdr,body.qz-print .qz-vbar{display:none!important}
+body.qz-print .app{display:block;max-width:none;margin:0;box-shadow:none;background:#fff}
+body.qz-print .content{box-shadow:none;padding:0;background:#fff;min-height:0}
+body.qz-print #qz-root.qz-pm{background:#fff;padding:0}
+body.qz-print #qz-root .qz-paper{box-shadow:none;margin:0;max-width:none;padding:0}
+
 </style>
 </head>
 <body>
@@ -637,19 +736,21 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
       <div class="logo">學<em>廣東話</em> 🇭🇰</div>
       <div class="logo-sub">เรียนภาษากวางตุ้ง · สำหรับคนไทย</div>
     </div>
+    <div class="score-chip" id="qz-timer" style="display:none"></div>
     <div class="score-chip" id="totalScore">★ 0</div>
   </div>
   <div class="tab-bar" id="tabBar">
-    <button class="tab-btn act" data-tab="home">🏠 主頁</button>
-    <button class="tab-btn" data-tab="jyutping">🔤 粵拼</button>
-    <button class="tab-btn" data-tab="soundalike">🃏 音近</button>
-    <button class="tab-btn" data-tab="vocab">📚 詞彙</button>
-    <button class="tab-btn" data-tab="sentence">📐 句式</button>
-    <button class="tab-btn" data-tab="classifier">🀄 量詞</button>
-    <button class="tab-btn" data-tab="dialogue">💬 對話</button>
-    <button class="tab-btn" data-tab="lessons">📖 課堂</button>
-    <button class="tab-btn" data-tab="game">🎮 遊戲</button>
-    <button class="tab-btn" data-tab="ai">🤖 AI對話</button>
+    <button class="tab-btn act" data-tab="home">🏠 <span class="tl">主頁</span><span class="tj">zyu2 jip6</span></button>
+    <button class="tab-btn" data-tab="jyutping">🔤 <span class="tl">粵拼</span><span class="tj">jyut6 ping3</span></button>
+    <button class="tab-btn" data-tab="soundalike">🃏 <span class="tl">音近</span><span class="tj">jam1 gan6</span></button>
+    <button class="tab-btn" data-tab="vocab">📚 <span class="tl">詞彙</span><span class="tj">ci4 wui6</span></button>
+    <button class="tab-btn" data-tab="sentence">📐 <span class="tl">句式</span><span class="tj">geoi3 sik1</span></button>
+    <button class="tab-btn" data-tab="classifier">🀄 <span class="tl">量詞</span><span class="tj">loeng6 ci4</span></button>
+    <button class="tab-btn" data-tab="dialogue">💬 <span class="tl">對話</span><span class="tj">deoi3 waa6</span></button>
+    <button class="tab-btn" data-tab="lessons">📖 <span class="tl">課堂</span><span class="tj">fo3 tong4</span></button>
+    <button class="tab-btn" data-tab="quiz">📝 <span class="tl">測驗</span><span class="tj">cak1 jim6</span></button>
+    <button class="tab-btn" data-tab="game">🎮 <span class="tl">遊戲</span><span class="tj">jau4 hei3</span></button>
+    <button class="tab-btn" data-tab="ai">🤖 <span class="tl">AI對話</span><span class="tj">deoi3 waa6</span></button>
   </div>
 </div>
 
@@ -798,6 +899,10 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
   </div>
 
   <!-- GAME -->
+  <div class="page" id="page-quiz">
+    <div id="qz-root"></div>
+  </div>
+
   <div class="page" id="page-game">
     <div class="g-tab-bar">
       <button class="g-tab act" data-game="color">🎨 顏色</button>
@@ -1253,6 +1358,7 @@ function initAll() {
     setupTabs();
     initAiChat();
     showPage('home');
+    if (window.qzResume) window.qzResume();
     Speech.init();
     if (!Speech.supported) $('noSpeechNote').style.display='block';
   } catch(e) {
@@ -1272,6 +1378,9 @@ function setupTabs() {
   });
 }
 function showTab(tab) {
+  if (window.qzGuard && !window.qzGuard(tab)) return;
+  if (S.tab === 'quiz' && tab !== 'quiz' && window.qzLeave) window.qzLeave();
+  if (tab === 'quiz' && window.qzShow) window.qzShow();
   if (S.tab === 'soundalike' && tab !== 'soundalike' && window.saLeave) window.saLeave();
   S.tab = tab;
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('act', b.dataset.tab===tab));
@@ -1288,8 +1397,8 @@ function showPage(id) {
 // ── HOME ──────────────────────────────────────────────────────
 function buildHome() {
   $('toneGrid').innerHTML = TONES.map(t=>'<div class="tone-card" style="border-left-color:'+t.color+'"><div class="tone-n" style="color:'+t.color+'">'+t.num+'</div><div class="tone-name">'+t.name+'</div><div class="tone-thai">'+t.thai+'</div></div>').join('');
-  const modules=[{icon:'🔤',title:'粵拼',sub:'聲母＋韻母＋聲調 卡牌練習',tab:'jyutping'},{icon:'🃏',title:'音近卡牌',sub:'分清「好似噉」嘅廣東話：圖鑑、聽音辨詞、翻牌配對',tab:'soundalike'},{icon:'📚',title:'詞彙學習卡',sub:'翻卡練習基本詞彙',tab:'vocab'},{icon:'📐',title:'句子結構',sub:'睇清楚廣東話句式',tab:'sentence'},{icon:'🀄',title:'量詞',sub:'個・隻・條・張…',tab:'classifier'},{icon:'💬',title:'情景對話',sub:'照顧・街市・緊急情況',tab:'dialogue'},{icon:'📖',title:'課堂材料',sub:'Chapter・Grammar・Extra',tab:'lessons'},{icon:'🎮',title:'互動遊戲',sub:'顏色・時間・方向・量詞',tab:'game'}];
-  $('navCards').innerHTML = modules.map(m=>'<div class="nav-card" onclick="showTab(\''+m.tab+'\')"><div><div class="nav-icon">'+m.icon+'</div><div class="nav-title">'+m.title+'</div><div class="nav-sub">'+m.sub+'</div></div><div class="nav-arrow">›</div></div>').join('');
+  const modules=[{icon:'🔤',title:'粵拼',jp:'jyut6 ping3',sub:'聲母＋韻母＋聲調 卡牌練習',tab:'jyutping'},{icon:'🃏',title:'音近卡牌',jp:'jam1 gan6 kaat1 paai2',sub:'分清「好似噉」嘅廣東話：圖鑑、聽音辨詞、翻牌配對',tab:'soundalike'},{icon:'📚',title:'詞彙學習卡',jp:'ci4 wui6 hok6 zaap6 kaat1',sub:'翻卡練習基本詞彙',tab:'vocab'},{icon:'📐',title:'句子結構',jp:'geoi3 zi2 git3 kau3',sub:'睇清楚廣東話句式',tab:'sentence'},{icon:'🀄',title:'量詞',jp:'loeng6 ci4',sub:'個・隻・條・張…',tab:'classifier'},{icon:'💬',title:'情景對話',jp:'cing4 ging2 deoi3 waa6',sub:'照顧・街市・緊急情況',tab:'dialogue'},{icon:'📖',title:'課堂材料',jp:'fo3 tong4 coi4 liu2',sub:'Chapter・Grammar・Extra',tab:'lessons'},{icon:'📝',title:'測驗',jp:'cak1 jim6',sub:'課堂測驗（一）：第1–7課・聽力、詞彙、句子重組・限時60分鐘',tab:'quiz'},{icon:'🎮',title:'互動遊戲',jp:'wu6 dung6 jau4 hei3',sub:'顏色・時間・方向・量詞',tab:'game'}];
+  $('navCards').innerHTML = modules.map(m=>'<div class="nav-card" onclick="showTab(\''+m.tab+'\')"><div><div class="nav-icon">'+m.icon+'</div><div class="nav-title">'+m.title+'<span class="nav-jp">'+m.jp+'</span></div><div class="nav-sub">'+m.sub+'</div></div><div class="nav-arrow">›</div></div>').join('');
 }
 
 // ── VOCAB ─────────────────────────────────────────────────────
@@ -3764,6 +3873,369 @@ function memoryWin(){
 renderHome();
 window.saLeave=stopSpeech;
 })();
+</script>
+<script>
+/* ══ 課堂測驗（一）· 第1–7課 ══ 詞彙用主 App 已讀入嘅 Google Sheet（S.data.vocab） */
+(function(){
+'use strict';
+var ROOT=document.getElementById('qz-root'); if(!ROOT)return;
+var CFG={
+  DURATION_MIN:60,             // 測驗時間（分鐘），撳「開始測驗」即計時
+  QUIZ_ID:'cantonese-l1-7-v2', // 改呢個＝新一輪測驗（學生記錄會重置）
+  FORM_ENDPOINT:'',            // Formspree 網址，例如 'https://formspree.io/f/xxxxxxxx'（自動寄去你 email）
+  TEACHER_EMAIL:'',            // 後備：mailto 收件人（學生要自己撳「傳送」）
+  AUDIO_NORMAL:'', AUDIO_SLOW:'', // 可選：自己錄嘅 mp3 網址（冇填就用瀏覽器語音）
+  MAX_PLAYS:3, SHOW_POS:true, VOCAB_COUNT:20,
+  CHAPTER_MIN:1, CHAPTER_MAX:7,
+  LOCK_NAV:true                // 測驗進行中，鎖住其他分頁（防止偷睇詞彙卡）
+};
+var TITLE='課堂測驗（一）· 第1–7課', TITLE_TH='แบบทดสอบประจำบท ครั้งที่ 1 · บทที่ 1–7';
+var LISTEN_TEXT='我叫藍天城，今年36歲，係一個日本人，冇兄弟姊妹。鐘意食壽司同飯團。每日7點鐘起身。識講小小廣東話。';
+var LISTEN_Q=[
+  {q:'佢叫乜名？',th:'เขาชื่ออะไร',opts:['藍天城','藍天成','林天城','藍田城'],ans:0},
+  {q:'佢今年幾多歲？',th:'เขาอายุเท่าไร',opts:['36歲','63歲','34歲','46歲'],ans:0},
+  {q:'佢係邊度人？',th:'เขาเป็นคนชาติไหน',opts:['日本人','泰國人','香港人','韓國人'],ans:0},
+  {q:'佢有冇兄弟姊妹？',th:'เขามีพี่น้องไหม',opts:['冇兄弟姊妹','有一個細佬','有一個妹妹','有兩個哥哥'],ans:0},
+  {q:'佢鍾意食乜？',th:'เขาชอบกินอะไร',opts:['壽司同飯團','壽司同蘋果','麵包同牛奶','雞蛋同飯團'],ans:0},
+  {q:'佢每日幾點鐘起身？',th:'เขาตื่นนอนกี่โมงทุกวัน',opts:['7點鐘','6點鐘','8點鐘','9點鐘'],ans:0},
+  {q:'佢識講幾多廣東話？',th:'เขาพูดกวางตุ้งได้แค่ไหน',opts:['識講小小','講得好好','一啲都唔識','淨係識寫'],ans:0}
+];
+// [字, 粵拼, 詞類, 後面標點]
+var SENTS=[
+ {th:'น้องสาวที่ชอบสีแดงมาก กำลังกินแอปเปิลอยู่ที่บ้าน',
+  t:[['一個','jat1 go3','數量'],['好','hou2','副詞'],['鍾意','zung1 ji3','動詞'],['紅色','hung4 sik1','名詞'],['嘅','ge3','助詞'],['妹妹','mui6 mui2','名詞'],['喺','hai2','介詞'],['屋企','uk1 kei2','名詞'],['食','sik6','動詞'],['蘋果','ping4 gwo2','名詞','。']]},
+ {th:'ตอนเช้า พ่อกับแม่ไม่ได้กินอาหารเช้าเลย',
+  t:[['朝頭早','ziu1 tau4 zou2','時間詞','，'],['爸爸','baa1 baa1','名詞'],['媽媽','maa1 maa1','名詞'],['都','dou1','副詞'],['冇','mou5','副詞'],['食','sik6','動詞'],['早餐','zou2 caan1','名詞','。']]},
+ {th:'ในครัวของเขามีชามหนึ่งใบกับตะเกียบสิบคู่',
+  t:[['佢','keoi5','代詞'],['廚房','cyu4 fong2','名詞'],['有','jau5','動詞'],['一隻','jat1 zek3','數量'],['碗','wun2','名詞'],['同','tung4','連詞'],['十對','sap6 deoi3','數量'],['筷子','faai3 zi2','名詞','。']]},
+ {th:'คุณปู่คุณย่าเลี้ยงลูกสุนัข 3 ตัว และกบ 8 ตัว',
+  t:[['爺爺','je4 je4','名詞'],['嫲嫲','maa4 maa4','名詞'],['養','joeng5','動詞'],['咗','zo2','助詞'],['3隻','saam1 zek3','數量'],['狗仔','gau2 zai2','名詞'],['同','tung4','連詞'],['8隻','baat3 zek3','數量'],['青蛙','ceng1 waa1','名詞','。']]},
+ {th:'คุณนายหลี่ปีนี้น่าจะอายุ 54 ปีแล้ว เธอมีน้องชายหนึ่งคนอาศัยอยู่ที่ประเทศไทย',
+  t:[['李太','lei5 taai2','名詞'],['今年','gam1 nin4','時間詞'],['好似','hou2 ci5','副詞'],['54歲','ng5 sap6 sei3 seoi3','數量'],['啦','laa1','助詞','，'],['佢','keoi5','代詞'],['有','jau5','動詞'],['1個','jat1 go3','數量'],['細佬','sai3 lou2','名詞'],['喺','hai2','介詞'],['泰國','taai3 gwok3','名詞'],['住','zyu6','動詞','。']]}
+];
+
+/* ── 工具 ── */
+function q(s){return ROOT.querySelector(s);}
+var KEY='cq_'+CFG.QUIZ_ID;
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+var Z=null, ticking=null;
+function load(){try{return JSON.parse(localStorage.getItem(KEY));}catch(e){return null;}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(Z));}catch(e){}}
+if(location.search.indexOf('reset=teacher')>=0){try{localStorage.removeItem(KEY);}catch(e){} try{history.replaceState(null,'',location.pathname+location.hash);}catch(e){}}
+function inProgress(){return !!(Z&&Z.quiz&&!Z.submitted);}
+
+/* ── 詞彙：用主 App 已讀入嘅資料（只用 Chapter 第1–7課） ── */
+function getPool(){
+  var seen={},pool=[];
+  ((typeof S!=='undefined'&&S.data&&S.data.vocab)||[]).forEach(function(w){
+    if(w._type!=='Chapter')return;
+    var ch=w._num; if(!(ch>=CFG.CHAPTER_MIN&&ch<=CFG.CHAPTER_MAX))return;
+    var zh=String(w.char||'').trim(),jp=String(w.jyutping||'').trim(),th=String(w.thai||'').trim();
+    if(!zh||!th)return;
+    var k=zh+'|'+th; if(seen[k])return; seen[k]=1;
+    pool.push([ch,zh,jp,th]);
+  });
+  return pool;
+}
+function vocabLive(){return !!(typeof S!=='undefined'&&S.sourceStatus&&S.sourceStatus.vocab==='live');}
+
+function buildQuiz(pool){
+  var byCh={}; pool.forEach(function(w){(byCh[w[0]]=byCh[w[0]]||[]).push(w);});
+  var lists=shuffle(Object.keys(byCh)).map(function(c){return shuffle(byCh[c]);});
+  var picked=[];
+  while(picked.length<CFG.VOCAB_COUNT&&lists.some(function(l){return l.length;})){
+    for(var i=0;i<lists.length;i++){var l=lists[i]; if(l.length&&picked.length<CFG.VOCAB_COUNT)picked.push(l.pop());}
+  }
+  picked=shuffle(picked);
+  var allTh=[]; pool.forEach(function(x){if(allTh.indexOf(x[3])<0)allTh.push(x[3]);});
+  var vocab=picked.map(function(w){
+    var wrong=shuffle(allTh.filter(function(t){return t!==w[3];})).slice(0,3);
+    var opts=shuffle([w[3]].concat(wrong));
+    return {ch:w[0],zh:w[1],jp:w[2],opts:opts,ans:opts.indexOf(w[3])};
+  });
+  var listen=LISTEN_Q.map(function(x){var opts=shuffle(x.opts);return {q:x.q,th:x.th,opts:opts,ans:opts.indexOf(x.opts[x.ans])};});
+  var sent=SENTS.map(function(s){
+    var id=s.t.map(function(_,i){return i;}),o=shuffle(id),n=0;
+    while(o.every(function(v,i){return v===i;})&&n++<20)o=shuffle(id);
+    return {order:o};
+  });
+  return {listen:listen,vocab:vocab,sent:sent};
+}
+
+/* ── 開始畫面 ── */
+function renderStart(){
+  ROOT.classList.remove('qz-pm');
+  var pool=getPool(), live=vocabLive(), ready=live&&pool.length>=8;
+  var h='<div class="qz-card qz-intro"><h2>'+TITLE+'</h2><div class="qz-th" style="color:var(--mute);font-size:13px">'+TITLE_TH+'</div><ul>'+
+    '<li>限時 <b>'+CFG.DURATION_MIN+' 分鐘</b>，撳「開始測驗」即倒數 <span class="qz-th">· จับเวลา '+CFG.DURATION_MIN+' นาทีทันทีที่เริ่ม</span></li>'+
+    '<li>一、聽力 7 題　二、詞彙 '+CFG.VOCAB_COUNT+' 題　三、句子重組 5 題（共 32 分）</li>'+
+    '<li>開始後<b>唔可以轉去其他分頁</b>，離開頁面會被記錄 <span class="qz-th">· ห้ามออกจากหน้านี้ ระบบจะบันทึกไว้</span></li>'+
+    '<li>提交後唔可以再改；時間到會自動提交 <span class="qz-th">· ส่งแล้วแก้ไขไม่ได้</span></li></ul>';
+  if(ready)h+='<div class="qz-ok">✅ 詞彙已準備好（第'+CFG.CHAPTER_MIN+'–'+CFG.CHAPTER_MAX+'課，共 '+pool.length+' 個）</div><button class="qz-btn big" id="qz-start">開始測驗 · เริ่มทำข้อสอบ</button>';
+  else h+='<div class="qz-err">⚠️ 未讀到最新詞彙（'+(live?'第1–7課嘅詞彙太少：'+pool.length+' 個':'Google Sheet 未連接')+'），暫時唔可以開考。<br><span class="qz-th">ยังโหลดคำศัพท์ไม่สำเร็จ ยังเริ่มสอบไม่ได้</span></div><button class="qz-btn" id="qz-reload">🔄 重新載入詞彙 · โหลดใหม่</button>';
+  h+='</div>';
+  if(/check=teacher/.test(location.search)){
+    var cnt={}; pool.forEach(function(w){cnt[w[0]]=(cnt[w[0]]||0)+1;});
+    h+='<div class="qz-card"><b>【老師檢查】詞彙共 '+pool.length+' 個</b><br>'+Object.keys(cnt).sort(function(a,b){return a-b;}).map(function(c){return '第'+c+'課：'+cnt[c];}).join('　')+
+      '<br><br><table class="qz-tbl"><tr><th>課</th><th>中文</th><th>粵拼</th><th>泰文</th></tr>'+pool.map(function(w){return '<tr><td>'+w[0]+'</td><td>'+esc(w[1])+'</td><td>'+esc(w[2])+'</td><td class="qz-th">'+esc(w[3])+'</td></tr>';}).join('')+'</table></div>';
+  }
+  ROOT.innerHTML=h;
+}
+function startExam(){
+  var pool=getPool(); if(!vocabLive()||pool.length<8)return renderStart();
+  if(!confirm('開始後即時倒數 '+CFG.DURATION_MIN+' 分鐘，同埋唔可以轉去其他分頁。\nเริ่มแล้วจับเวลาทันที และออกจากหน้านี้ไม่ได้\n\n確定開始？ ยืนยันเริ่ม?'))return;
+  Z={start:Date.now(),name:'',leaves:0,plays:{n:0,s:0},submitted:false};
+  Z.quiz=buildQuiz(pool);
+  Z.ans={listen:Z.quiz.listen.map(function(){return null;}),vocab:Z.quiz.vocab.map(function(){return null;}),sent:SENTS.map(function(){return [];})};
+  save(); render(); startTick();
+  try{window.scrollTo(0,0);}catch(e){}
+}
+
+/* ── 作答畫面 ── */
+function ruby(zh,jp){return jp?'<ruby>'+esc(zh)+'<rt>'+esc(jp)+'</rt></ruby>':esc(zh);}
+function tileHtml(si,ti,inAns){
+  var t=SENTS[si].t[ti];
+  return '<button class="qz-tile p-'+t[2]+'" data-s="'+si+'" data-t="'+ti+'" data-in="'+(inAns?1:0)+'">'+ruby(t[0],t[1])+(t[3]||'')+(CFG.SHOW_POS?'<span class="qz-pos">'+t[2]+'</span>':'')+'</button>';
+}
+function renderSent(i){
+  var placed=Z.ans.sent[i];
+  var pool=Z.quiz.sent[i].order.filter(function(t){return placed.indexOf(t)<0;});
+  q('#qz-ans'+i).innerHTML=placed.map(function(t){return tileHtml(i,t,true);}).join('');
+  q('#qz-pool'+i).innerHTML=pool.map(function(t){return tileHtml(i,t,false);}).join('');
+}
+function render(){
+  ROOT.classList.remove('qz-pm');
+  var Q=Z.quiz;
+  var h='<div class="qz-card"><label class="qz-nm" for="qz-nm">姓名 · ชื่อ-นามสกุล</label><input type="text" id="qz-nm" autocomplete="off" placeholder="請輸入你嘅名 / กรอกชื่อของคุณ" value="'+esc(Z.name||'')+'"></div>';
+  h+='<div class="qz-sec">一、聽力 <span class="qz-th" style="font-size:14px;color:var(--mute)">ฟัง</span></div><p class="qz-sub">聽錄音，揀正確答案。每種速度最多播 '+CFG.MAX_PLAYS+' 次。<br><span class="qz-th">ฟังแล้วเลือกคำตอบที่ถูกต้อง เล่นได้สูงสุดความเร็วละ '+CFG.MAX_PLAYS+' ครั้ง</span></p><div class="qz-card">'+
+    '<div class="qz-btns"><button class="qz-btn" id="qz-pN">▶ 正常速度 <span id="qz-cN"></span></button><button class="qz-btn slow" id="qz-pS">🐢 慢速 <span id="qz-cS"></span></button></div>';
+  Q.listen.forEach(function(x,i){
+    h+='<div class="qz-q"><div class="qz-qt"><span class="qz-num">'+(i+1)+'.</span>'+esc(x.q)+'<small class="qz-th">'+esc(x.th)+'</small></div><div class="qz-opts">'+
+      x.opts.map(function(o,j){return '<button class="qz-opt'+(Z.ans.listen[i]===j?' on':'')+'" data-k="listen" data-i="'+i+'" data-j="'+j+'">'+esc(o)+'</button>';}).join('')+'</div></div>';
+  });
+  h+='</div>';
+  h+='<div class="qz-sec">二、詞彙選擇題 <span class="qz-th" style="font-size:14px;color:var(--mute)">คำศัพท์</span></div><p class="qz-sub">揀出正確嘅意思（共 '+Q.vocab.length+' 題）<br><span class="qz-th">เลือกความหมายที่ถูกต้อง</span></p><div class="qz-card">';
+  Q.vocab.forEach(function(x,i){
+    h+='<div class="qz-q qz-vq"><div class="qz-qt"><span class="qz-num">'+(i+1)+'.</span></div><div class="qz-big qz-zh">'+ruby(x.zh,x.jp)+'</div><div class="qz-opts">'+
+      x.opts.map(function(o,j){return '<button class="qz-opt qz-th'+(Z.ans.vocab[i]===j?' on':'')+'" data-k="vocab" data-i="'+i+'" data-j="'+j+'">'+esc(o)+'</button>';}).join('')+'</div></div>';
+  });
+  h+='</div>';
+  h+='<div class="qz-sec">三、句子重組 <span class="qz-th" style="font-size:14px;color:var(--mute)">เรียงประโยค</span></div><p class="qz-sub">按泰文意思，將字塊砌成正確句子。撳已揀嘅字塊可以放返落去。<br><span class="qz-th">เรียงคำให้เป็นประโยคตามความหมายภาษาไทย แตะคำที่เลือกแล้วเพื่อเอาออก</span></p>';
+  SENTS.forEach(function(s,i){
+    h+='<div class="qz-card"><div class="qz-qt"><span class="qz-num">'+(i+1)+'.</span></div><div class="qz-thai-s qz-th">'+esc(s.th)+'</div><div class="qz-ans" id="qz-ans'+i+'"></div><div class="qz-pool" id="qz-pool'+i+'"></div><div class="qz-rs"><button class="qz-btn ghost" data-reset="'+i+'" style="padding:6px 12px;font-size:12px">↺ 重來 / เริ่มใหม่</button></div></div>';
+  });
+  h+='<button class="qz-btn big" id="qz-submit">提交測驗 · ส่งข้อสอบ</button><p class="qz-note">時間到會自動提交 · หมดเวลาจะส่งอัตโนมัติ</p>';
+  ROOT.innerHTML=h;
+  SENTS.forEach(function(_,i){renderSent(i);});
+  updPlays();
+}
+
+/* ── 語音 ── */
+var SYN=window.speechSynthesis||null, VOICE=null, audioEl=null;
+function pickVoice(){
+  if(!SYN)return; var vs=[]; try{vs=SYN.getVoices()||[];}catch(e){}
+  VOICE=vs.filter(function(v){return /zh[-_]HK|yue/i.test(v.lang);})[0]||vs.filter(function(v){return /zh/i.test(v.lang);})[0]||null;
+}
+if(SYN){pickVoice();if(SYN.addEventListener)SYN.addEventListener('voiceschanged',pickVoice);}
+function stopSpeech(){try{if(SYN)SYN.cancel();}catch(e){} try{if(audioEl)audioEl.pause();}catch(e){}}
+function updPlays(){
+  var n=Z.plays||{n:0,s:0};
+  var cN=q('#qz-cN'),cS=q('#qz-cS'),pN=q('#qz-pN'),pS=q('#qz-pS'); if(!cN)return;
+  cN.textContent='('+(CFG.MAX_PLAYS-n.n)+')'; cS.textContent='('+(CFG.MAX_PLAYS-n.s)+')';
+  pN.disabled=n.n>=CFG.MAX_PLAYS; pS.disabled=n.s>=CFG.MAX_PLAYS;
+}
+function play(kind){
+  Z.plays=Z.plays||{n:0,s:0};
+  if(Z.plays[kind]>=CFG.MAX_PLAYS)return;
+  var url=kind==='n'?CFG.AUDIO_NORMAL:CFG.AUDIO_SLOW, rate=kind==='n'?0.9:0.55;
+  if(url){
+    stopSpeech(); audioEl=new Audio(url); audioEl.play().catch(function(){alert('播放失敗 เล่นเสียงไม่สำเร็จ');});
+  }else if(SYN){
+    var busy=false; try{busy=SYN.speaking||SYN.pending;}catch(e){}
+    var go=function(){
+      var u=new SpeechSynthesisUtterance(LISTEN_TEXT);
+      if(VOICE)u.voice=VOICE; u.lang=(VOICE&&VOICE.lang)||'zh-HK'; u.rate=rate;
+      SYN.speak(u);
+    };
+    if(busy){SYN.cancel();setTimeout(go,80);}else go();   // Chrome：cancel 之後即刻 speak 會被吞
+  }else{alert('呢部機唔支援語音 อุปกรณ์นี้ไม่รองรับเสียง');return;}
+  Z.plays[kind]++; save(); updPlays();
+}
+
+/* ── 計時（頭部右上角） ── */
+function chip(){return document.getElementById('qz-timer');}
+function tick(){
+  if(!inProgress())return stopTick();
+  var left=CFG.DURATION_MIN*60000-(Date.now()-Z.start), t=chip();
+  if(left<=0){if(t)t.textContent='00:00';submit(true);return;}
+  var s=Math.ceil(left/1000);
+  if(t){t.style.display='';t.textContent='⏱ '+String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');t.classList.toggle('qz-warn',s<=300);}
+}
+function startTick(){stopTick();tick();ticking=setInterval(tick,1000);}
+function stopTick(){clearInterval(ticking);ticking=null;var t=chip();if(t){t.style.display='none';t.classList.remove('qz-warn');}}
+
+/* ── 評分 ── */
+function sentOK(s,i){return Z.ans.sent[i].length===s.t.length&&Z.ans.sent[i].every(function(v,k){return v===k;});}
+function scoreAll(){
+  var Q=Z.quiz,a=Z.ans;
+  var L=Q.listen.filter(function(x,i){return a.listen[i]===x.ans;}).length;
+  var V=Q.vocab.filter(function(x,i){return a.vocab[i]===x.ans;}).length;
+  var R=SENTS.filter(function(s,i){return sentOK(s,i);}).length;
+  return {L:L,V:V,R:R,total:L+V+R,max:Q.listen.length+Q.vocab.length+SENTS.length};
+}
+function report(sc,auto){
+  var Q=Z.quiz,a=Z.ans,used=Math.min(CFG.DURATION_MIN*60,Math.round((Z.endAt-Z.start)/1000)),out=[];
+  out.push('姓名：'+(Z.name||'(未填)'));
+  out.push('總分：'+sc.total+'/'+sc.max+'（聽力 '+sc.L+'/'+Q.listen.length+'　詞彙 '+sc.V+'/'+Q.vocab.length+'　句子 '+sc.R+'/'+SENTS.length+'）');
+  out.push('用時：'+Math.floor(used/60)+'分'+(used%60)+'秒　'+(auto?'（時間到自動提交）':''));
+  out.push('離開頁面／分頁次數：'+(Z.leaves||0));
+  out.push('提交時間：'+new Date(Z.endAt).toLocaleString('zh-HK',{timeZone:'Asia/Hong_Kong'}));
+  out.push('\n【聽力】');
+  Q.listen.forEach(function(x,i){out.push((i+1)+'. '+x.q+' → '+(a.listen[i]==null?'(未答)':x.opts[a.listen[i]])+' '+(a.listen[i]===x.ans?'✓':'✗（正確：'+x.opts[x.ans]+'）'));});
+  out.push('\n【詞彙】');
+  Q.vocab.forEach(function(x,i){out.push((i+1)+'. [L'+x.ch+'] '+x.zh+' → '+(a.vocab[i]==null?'(未答)':x.opts[a.vocab[i]])+' '+(a.vocab[i]===x.ans?'✓':'✗（正確：'+x.opts[x.ans]+'）'));});
+  out.push('\n【句子重組】');
+  SENTS.forEach(function(s,i){
+    var txt=function(ids){return ids.map(function(t){return s.t[t][0]+(s.t[t][3]||'');}).join(' ');};
+    var ok=sentOK(s,i);
+    out.push((i+1)+'. '+(ok?'✓':'✗')+' 學生：'+(txt(a.sent[i])||'(未答)')+(ok?'':'\n    正確：'+txt(s.t.map(function(_,k){return k;}))));
+  });
+  return out.join('\n');
+}
+async function sendResult(){
+  var sc=scoreAll(),body=report(sc,Z.auto);
+  var subject='廣東話課堂測驗（一）第1-7課 – '+(Z.name||'未填名')+' – '+sc.total+'/'+sc.max;
+  if(CFG.FORM_ENDPOINT){
+    try{
+      var r=await fetch(CFG.FORM_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({_subject:subject,name:Z.name||'',score:sc.total+'/'+sc.max,message:body})});
+      if(r.ok){Z.sent=true;save();return 'ok';}
+    }catch(e){}
+    return 'fail';
+  }
+  if(CFG.TEACHER_EMAIL){location.href='mailto:'+CFG.TEACHER_EMAIL+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);return 'mailto';}
+  return 'noconfig';
+}
+async function submit(auto){
+  if(!inProgress())return;
+  if(!auto){
+    if(!(Z.name||'').trim()){alert('請先填姓名 กรุณากรอกชื่อก่อน');var n=q('#qz-nm');if(n)n.focus();return;}
+    var left=Z.ans.listen.filter(function(x){return x==null;}).length+Z.ans.vocab.filter(function(x){return x==null;}).length+Z.ans.sent.filter(function(x){return !x.length;}).length;
+    var warn=left?'仲有 '+left+' 題未答。\nยังไม่ได้ตอบอีก '+left+' ข้อ\n\n':'';
+    if(!confirm(warn+'確定提交？提交後唔可以再改。\nยืนยันการส่ง? ส่งแล้วแก้ไขไม่ได้'))return;
+  }
+  Z.submitted=true;Z.auto=!!auto;Z.endAt=Date.now();save();
+  stopTick();stopSpeech();
+  renderPaper();setStatus('wait');
+  setStatus(await sendResult());
+}
+
+/* ── 完成後：唯讀試卷 ── */
+function setStatus(state){
+  var m={wait:['wait','傳送緊… กำลังส่ง…'],ok:['ok','✓ 已寄俾老師 ส่งครูแล้ว'],fail:['bad','✗ 傳送失敗 ส่งไม่สำเร็จ'],mailto:['wait','請喺電郵程式撳「傳送」 กดส่งในแอปอีเมล'],noconfig:['bad','未設定收件電郵，請截圖畀老師 แคปหน้าจอส่งครู']}[state]||['wait',''];
+  var el=q('#qz-stat'); if(!el)return;
+  el.className='qz-st '+m[0]; el.textContent=m[1];
+  var rb=q('#qz-resend'); if(rb)rb.style.display=(state==='ok'||state==='wait')?'none':'';
+}
+function mk(ok){return ok?'<span class="qz-mk ok">✓</span>':'<span class="qz-mk no">✗</span>';}
+function renderPaper(){
+  var Q=Z.quiz,a=Z.ans,sc=scoreAll(),end=Z.endAt||Date.now();
+  var used=Math.min(CFG.DURATION_MIN*60,Math.round((end-Z.start)/1000)),pct=Math.round(sc.total/sc.max*100),LET='ABCD';
+  var optList=function(opts,ans,mine,thai){
+    return '<ul class="qz-po">'+opts.map(function(o,j){
+      var c=j===ans?'corr':(j===mine?'bad':'');
+      var tag=j===ans?'<span class="qz-tag">✓ 正確答案</span>':(j===mine?'<span class="qz-tag">✗ 你嘅答案</span>':'');
+      return '<li class="'+c+(thai?' qz-th':'')+'">'+LET[j]+'. '+esc(o)+(j===ans&&j===mine?'<span class="qz-tag"> · 你嘅答案</span>':'')+tag+'</li>';
+    }).join('')+'</ul>'+(mine==null?'<div class="qz-th" style="color:var(--red);font-size:13px;margin-top:4px">未作答 · ไม่ได้ตอบ</div>':'');
+  };
+  var h='<div class="qz-vbar"><span class="qz-fn">廣東話課堂測驗（一）_第1-7課_'+esc(Z.name||'')+'.pdf</span><span class="qz-st wait" id="qz-stat"></span><button id="qz-resend" style="display:none">重新傳送</button><button id="qz-print">🖨 儲存 PDF</button></div><div class="qz-paper">';
+  h+='<h2>'+TITLE+'</h2><div class="qz-en">'+TITLE_TH+'</div>';
+  h+='<div class="qz-meta"><span><b>姓名：</b>'+esc(Z.name||'')+'</span><span><b>提交：</b>'+esc(new Date(end).toLocaleString('zh-HK',{timeZone:'Asia/Hong_Kong',hour12:false}))+'</span><span><b>用時：</b>'+Math.floor(used/60)+'分'+(used%60)+'秒'+(Z.auto?'（時間到）':'')+'</span></div>';
+  h+='<div class="qz-scorebox"><div class="qz-stamp"><small>總分 SCORE</small>'+sc.total+' / '+sc.max+'<small>'+pct+'%</small></div><div class="qz-parts"><span>一、聽力</span><b>'+sc.L+' / '+Q.listen.length+'</b><br><span>二、詞彙</span><b>'+sc.V+' / '+Q.vocab.length+'</b><br><span>三、句子重組</span><b>'+sc.R+' / '+SENTS.length+'</b></div></div>';
+  h+='<div class="qz-psec"><span>一、聽力 <small class="qz-th">ฟัง</small></span><small>'+sc.L+' / '+Q.listen.length+'</small></div>';
+  Q.listen.forEach(function(x,i){var ok=a.listen[i]===x.ans;
+    h+='<div class="qz-pq '+(ok?'right':'wrong')+'"><div class="qz-pqh">'+mk(ok)+'<span>'+(i+1)+'. '+esc(x.q)+'<small>'+esc(x.th)+'</small></span></div>'+optList(x.opts,x.ans,a.listen[i],false)+'</div>';});
+  h+='<div class="qz-psec"><span>二、詞彙選擇題 <small class="qz-th">คำศัพท์</small></span><small>'+sc.V+' / '+Q.vocab.length+'</small></div>';
+  Q.vocab.forEach(function(x,i){var ok=a.vocab[i]===x.ans;
+    h+='<div class="qz-pq '+(ok?'right':'wrong')+'"><div class="qz-pqh">'+mk(ok)+'<span>'+(i+1)+'.<span class="qz-ch">第'+x.ch+'課</span></span></div><div class="qz-vw">'+ruby(x.zh,x.jp)+'</div>'+optList(x.opts,x.ans,a.vocab[i],true)+'</div>';});
+  h+='<div class="qz-psec"><span>三、句子重組 <small class="qz-th">เรียงประโยค</small></span><small>'+sc.R+' / '+SENTS.length+'</small></div>';
+  SENTS.forEach(function(s,i){var ok=sentOK(s,i);
+    var row=function(ids){return ids.map(function(t){return '<span class="qz-stile">'+ruby(s.t[t][0],s.t[t][1])+esc(s.t[t][3]||'')+'</span>';}).join('');};
+    h+='<div class="qz-pq '+(ok?'right':'wrong')+'"><div class="qz-pqh">'+mk(ok)+'<span>'+(i+1)+'.</span></div><div class="qz-thp">'+esc(s.th)+'</div>'+
+      '<div class="qz-srow"><b>你嘅答案</b><div class="qz-stiles '+(ok?'good':'mine-bad')+'">'+(a.sent[i].length?row(a.sent[i]):'<span class="qz-th" style="font-size:14px;color:var(--red)">未作答 · ไม่ได้ตอบ</span>')+'</div></div>'+
+      (ok?'':'<div class="qz-srow"><b>正確答案</b><div class="qz-stiles ans-ok">'+row(s.t.map(function(_,k){return k;}))+'</div></div>')+'</div>';});
+  h+='<div class="qz-foot">— 完 · จบ —<br>此試卷已提交，唯讀 · ส่งแล้ว ไม่สามารถแก้ไขได้</div></div>';
+  ROOT.classList.add('qz-pm');
+  ROOT.innerHTML=h;
+  try{window.scrollTo(0,0);}catch(e){}
+  q('#qz-resend').onclick=async function(){setStatus('wait');setStatus(await sendResult());};
+  q('#qz-print').onclick=function(){
+    document.body.classList.add('qz-print');
+    var done=function(){document.body.classList.remove('qz-print');window.removeEventListener('afterprint',done);};
+    window.addEventListener('afterprint',done);
+    window.print(); setTimeout(done,2000);
+  };
+}
+
+/* ── 鎖定（只喺測驗頁面範圍） ── */
+['contextmenu','copy','cut','paste','dragstart','selectstart'].forEach(function(ev){
+  ROOT.addEventListener(ev,function(e){if(!(e.target&&e.target.tagName==='INPUT'))e.preventDefault();});
+});
+function quizVisible(){return ROOT.offsetParent!==null;}
+document.addEventListener('keydown',function(e){
+  if(!quizVisible())return;
+  var k=(e.key||'').toLowerCase(),inInput=e.target&&e.target.tagName==='INPUT',done=Z&&Z.submitted;
+  if(e.key==='F12'||((e.ctrlKey||e.metaKey)&&['c','v','x','u','s','a','f'].indexOf(k)>=0&&!inInput)||((e.ctrlKey||e.metaKey)&&k==='p'&&!done)||((e.ctrlKey||e.metaKey)&&e.shiftKey&&['i','j','c'].indexOf(k)>=0))e.preventDefault();
+});
+document.addEventListener('visibilitychange',function(){if(document.hidden&&inProgress()){Z.leaves=(Z.leaves||0)+1;save();}});
+window.addEventListener('beforeunload',function(e){if(inProgress()){e.preventDefault();e.returnValue='';}});
+
+/* ── 事件 ── */
+ROOT.addEventListener('click',function(e){
+  var t=e.target;
+  if(t.closest('#qz-start'))return startExam();
+  if(t.closest('#qz-reload')){
+    var b=t.closest('#qz-reload'); b.disabled=true; b.textContent='讀緊… กำลังโหลด…';
+    Promise.resolve(typeof refreshFromSheets==='function'&&refreshFromSheets()).then(function(){renderStart();},function(){renderStart();});
+    return;
+  }
+  if(!inProgress())return;
+  var o=t.closest('.qz-opt');
+  if(o){var k=o.dataset.k,i=+o.dataset.i,j=+o.dataset.j;Z.ans[k][i]=j;
+    ROOT.querySelectorAll('.qz-opt[data-k="'+k+'"][data-i="'+i+'"]').forEach(function(b){b.classList.toggle('on',+b.dataset.j===j);});save();return;}
+  var tl=t.closest('.qz-tile');
+  if(tl){var s=+tl.dataset.s,id=+tl.dataset.t,arr=Z.ans.sent[s];
+    if(tl.dataset.in==='1')arr.splice(arr.indexOf(id),1);else arr.push(id);
+    renderSent(s);save();return;}
+  var r=t.closest('[data-reset]');
+  if(r){var s2=+r.dataset.reset;Z.ans.sent[s2]=[];renderSent(s2);save();return;}
+  if(t.closest('#qz-pN'))return play('n');
+  if(t.closest('#qz-pS'))return play('s');
+  if(t.closest('#qz-submit'))return submit(false);
+});
+ROOT.addEventListener('input',function(e){if(e.target.id==='qz-nm'&&Z){Z.name=e.target.value;save();}});
+
+/* ── 同主 App 嘅接口 ── */
+// 測驗進行中，唔俾轉去其他分頁（返 false = 擋住）
+window.qzGuard=function(tab){
+  if(!CFG.LOCK_NAV||!inProgress()||tab==='quiz')return true;
+  alert('測驗進行中，唔可以離開呢頁。請先提交測驗。\nกำลังสอบอยู่ ออกจากหน้านี้ไม่ได้ กรุณาส่งข้อสอบก่อน');
+  return false;
+};
+window.qzShow=function(){ if(!Z)renderStart(); };        // 入返測驗分頁：未開始就顯示開始畫面（詞彙可能剛讀完）
+window.qzLeave=function(){ stopSpeech(); };
+window.qzResume=function(){                               // 重新整理後測驗仍進行中 → 直接返測驗頁
+  if(inProgress()&&typeof showTab==='function')showTab('quiz');
+};
+
+/* ── 啟動 ── */
+Z=load();
+if(Z&&Z.submitted){renderPaper();setStatus(Z.sent?'ok':'fail');}
+else if(inProgress()){render();startTick();}
+else{Z=null;renderStart();}
+window.qzResume();   // 主 App 可能已經初始化完（連呢個腳本之前），所以呢度都要叫一次
+})();
+
 </script>
 </body>
 </html>
