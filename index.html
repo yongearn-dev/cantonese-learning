@@ -873,6 +873,27 @@ body.qz-print #qz2-root .qz-paper{box-shadow:none;margin:0;max-width:none;paddin
 #qz2-root .qz-scr{font:13px 'Noto Sans TC',sans-serif;color:#444;background:#f0f0f0;border-radius:6px;padding:6px 10px;margin:8px 0}
 #qz2-root .qz-sub2{margin-top:8px;font:700 14px 'Noto Sans TC',sans-serif;display:flex;gap:8px;align-items:center}
 #qz2-root .qz-sub2 .qz-pts{margin-left:auto}
+/* ── 拖拉字塊 ── */
+#qz-root .qz-tile,#qz2-root .qz-tile{touch-action:none;cursor:grab;-webkit-user-drag:none}
+#qz-root .qz-tile.qz-dragging,#qz2-root .qz-tile.qz-dragging{opacity:.25}
+#qz-root .qz-ans.qz-over,#qz2-root .qz-ans.qz-over{background:#dff3e6;border-style:solid}
+.qz-ph{display:inline-block;width:6px;align-self:stretch;min-height:48px;background:#1f6f5b;border-radius:3px}
+.qz-ghost{position:fixed;z-index:99999;pointer-events:none;box-sizing:border-box;border:2px solid #1f6f5b;border-bottom-width:4px;background:#fff;border-radius:10px;padding:14px 10px 4px;font:700 20px 'Noto Serif TC',serif;text-align:center;color:#26231d;box-shadow:0 10px 24px rgba(0,0,0,.3);transform:rotate(-3deg);opacity:.95;-webkit-user-select:none;user-select:none}
+.qz-ghost rt{font:500 .5em 'Noto Sans TC',sans-serif;color:#7a7466}
+.qz-ghost .qz-pos{display:block;font:500 10px 'Noto Sans TC',sans-serif;margin-top:2px;padding:0 4px;border-radius:4px;color:#fff;background:#888}
+/* 測驗（二）：聽力泰文、量詞／相反詞 */
+#qz2-root .qz-oth{display:block;font:600 18px 'Noto Sans Thai',sans-serif;color:#4d4838;margin-top:3px;line-height:1.4}
+#qz2-root .qz-lopt .qz-oz{font-size:21px}
+#qz2-root .qz-pth{font-weight:600;color:#555;font-size:14px}
+#qz2-root .qz-osent{font-size:24px;line-height:2.1;margin:4px 0 10px}
+#qz2-root .qz-blank{display:inline-block;min-width:1.6em;text-align:center;border-bottom:3px solid var(--red);color:var(--red);font-weight:900;margin:0 2px;background:#fff0ee;border-radius:6px 6px 0 0}
+#qz2-root .qz-hl{background:#fff4d6;border-bottom:3px solid var(--gold);border-radius:4px;padding:0 3px;color:inherit}
+#qz2-root .qz-copt{font-size:24px;padding:16px 6px 8px}
+#qz2-root .qz-vw ruby,#qz2-root .qz-osent ruby{ruby-position:over}
+#qz2-root ruby{margin:0 2px}
+#qz2-root .qz-osent ruby{margin:0 5px}
+#qz2-root .qz-qt ruby{margin:0 3px}
+#qz2-root .qz-osent rt{font-size:.42em}
 
 
 </style>
@@ -4075,6 +4096,77 @@ bar.addEventListener('click',function(e){
 window.qzHubRefresh();
 })();
 
+/* 句子重組：拖拉字塊（滑鼠＋觸控），亦保留撳一下加入／取消 */
+window.qzDrag=function(ROOT,prefix,cfg){
+  var st=null,ghost=null,ph=null,swallow=false;
+  function area(si){return ROOT.querySelector('#'+prefix+'ans'+si);}
+  function locate(e){
+    var a=area(st.si); if(!a)return null;
+    var r=a.getBoundingClientRect(),m=14;
+    if(e.clientX<r.left-m||e.clientX>r.right+m||e.clientY<r.top-m||e.clientY>r.bottom+m)return null;
+    var tiles=[].slice.call(a.querySelectorAll('.qz-tile:not(.qz-dragging)')),idx=tiles.length;
+    for(var i=0;i<tiles.length;i++){
+      var t=tiles[i].getBoundingClientRect();
+      if(e.clientY<t.top){idx=i;break;}
+      if(e.clientY<=t.bottom&&e.clientX<t.left+t.width/2){idx=i;break;}
+    }
+    return {a:a,idx:idx,tiles:tiles};
+  }
+  function clean(){
+    if(ghost&&ghost.parentNode)ghost.parentNode.removeChild(ghost);
+    if(ph&&ph.parentNode)ph.parentNode.removeChild(ph);
+    if(st&&st.el)st.el.classList.remove('qz-dragging');
+    var a=st&&area(st.si); if(a)a.classList.remove('qz-over');
+    ghost=ph=null;
+  }
+  ROOT.addEventListener('pointerdown',function(e){
+    if((e.pointerType==='mouse'&&e.button!==0)||!cfg.active())return;
+    var t=e.target.closest&&e.target.closest('.qz-tile'); if(!t)return;
+    st={el:t,si:+t.dataset.s,id:+t.dataset.t,inAns:t.dataset.in==='1',x:e.clientX,y:e.clientY,drag:false,pid:e.pointerId};
+  });
+  document.addEventListener('pointermove',function(e){
+    if(!st||e.pointerId!==st.pid)return;
+    if(!st.drag){
+      if(Math.hypot(e.clientX-st.x,e.clientY-st.y)<8)return;
+      st.drag=true;
+      var r=st.el.getBoundingClientRect();
+      ghost=st.el.cloneNode(true); ghost.className='qz-ghost'; ghost.style.width=r.width+'px'; ghost.style.height=r.height+'px';
+      var p0=st.el.querySelector('.qz-pos'),p1=ghost.querySelector('.qz-pos');
+      if(p0&&p1)p1.style.background=getComputedStyle(p0).backgroundColor;
+      document.body.appendChild(ghost);
+      st.el.classList.add('qz-dragging');
+      ph=document.createElement('span'); ph.className='qz-ph';
+    }
+    e.preventDefault();
+    var gw=ghost.offsetWidth,gh=ghost.offsetHeight;
+    ghost.style.left=(e.clientX-gw/2)+'px'; ghost.style.top=(e.clientY-gh/2)+'px';
+    var L=locate(e),a=area(st.si);
+    if(L){
+      a.classList.add('qz-over');
+      if(L.idx<L.tiles.length)a.insertBefore(ph,L.tiles[L.idx]);else a.appendChild(ph);
+    }else{
+      a.classList.remove('qz-over'); if(ph.parentNode)ph.parentNode.removeChild(ph);
+    }
+  },{passive:false});
+  function finish(e,cancel){
+    if(!st||e.pointerId!==st.pid)return;
+    var s=st; 
+    if(!s.drag){st=null;return;}
+    var L=cancel?null:locate(e);
+    var arr=cfg.arr(s.si);
+    if(!cancel){
+      if(s.inAns){var from=arr.indexOf(s.id); if(from>=0)arr.splice(from,1);}
+      if(L){var at=Math.min(L.idx,arr.length); arr.splice(at,0,s.id);}
+      else if(!s.inAns){/* 由字塊池拖去外面：冇變 */}
+    }
+    clean(); st=null; swallow=true; setTimeout(function(){swallow=false;},80);
+    cfg.change(s.si);
+  }
+  document.addEventListener('pointerup',function(e){finish(e,false);});
+  document.addEventListener('pointercancel',function(e){finish(e,true);});
+  ROOT.addEventListener('click',function(e){if(swallow){e.stopPropagation();e.preventDefault();swallow=false;}},true);
+};
+
 </script>
 <script>
 /* ══ 課堂測驗（一）· 第1–7課 ══ 詞彙用主 App 已讀入嘅 Google Sheet（S.data.vocab） */
@@ -4232,7 +4324,7 @@ function render(){
       x.opts.map(function(o,j){return '<button class="qz-opt qz-th'+(Z.ans.vocab[i]===j?' on':'')+'" data-k="vocab" data-i="'+i+'" data-j="'+j+'">'+esc(o)+'</button>';}).join('')+'</div></div>';
   });
   h+='</div>';
-  h+='<div class="qz-sec">三、句子重組 <span class="qz-th" style="font-size:14px;color:var(--mute)">เรียงประโยค</span></div><p class="qz-sub">按泰文意思，將字塊砌成正確句子。撳已揀嘅字塊可以放返落去。<br><span class="qz-th">เรียงคำให้เป็นประโยคตามความหมายภาษาไทย แตะคำที่เลือกแล้วเพื่อเอาออก</span></p>';
+  h+='<div class="qz-sec">三、句子重組 <span class="qz-th" style="font-size:14px;color:var(--mute)">เรียงประโยค</span></div><p class="qz-sub">按泰文意思，將字塊砌成正確句子。撳字塊加入，<b>亦可以拖拉字塊改次序</b>（拖出答案欄＝取消），唔洗重頭嚟過。<br><span class="qz-th">เรียงคำให้เป็นประโยคตามความหมายภาษาไทย แตะคำเพื่อเพิ่ม หรือ<b>ลากคำเพื่อสลับตำแหน่ง</b> (ลากออกนอกช่อง = เอาออก) ไม่ต้องเริ่มใหม่</span></p>';
   SENTS.forEach(function(s,i){
     h+='<div class="qz-card"><div class="qz-qt"><span class="qz-num">'+(i+1)+'.</span></div><div class="qz-thai-s qz-th">'+esc(s.th)+'</div><div class="qz-ans" id="qz-ans'+i+'"></div><div class="qz-pool" id="qz-pool'+i+'"></div><div class="qz-rs"><button class="qz-btn ghost" data-reset="'+i+'" style="padding:6px 12px;font-size:12px">↺ 重來 / เริ่มใหม่</button></div></div>';
   });
@@ -4490,6 +4582,7 @@ ROOT.addEventListener('click',function(e){
   if(t.closest('#qz-pS'))return play('s');
   if(t.closest('#qz-submit'))return submit(false);
 });
+if(window.qzDrag)window.qzDrag(ROOT,'qz-',{active:inProgress,arr:function(si){return Z.ans.sent[si];},change:function(si){renderSent(si);save();}});
 ROOT.addEventListener('input',function(e){if(e.target.id==='qz-nm'&&Z){Z.name=e.target.value;save();}});
 
 /* ── 同主 App 嘅接口 ── */
@@ -4521,7 +4614,7 @@ hubR(); window.qzResume();   // 主 App 可能已經初始化完（連呢個腳�
 var ROOT=document.getElementById('qz2-root'); if(!ROOT)return;
 var CFG={
   DURATION_MIN:60,
-  QUIZ_ID:'cantonese-l8-14-v1',
+  QUIZ_ID:'cantonese-l8-14-v2',
   FORM_ENDPOINT:'https://formspree.io/f/xbgdbeje',
   TEACHER_EMAIL:'yongearn@gmail.com',
   AUDIO:[{n:'',s:''},{n:'',s:''},{n:'',s:''},{n:'',s:''}], // 可選：四段聽力嘅 mp3
@@ -4554,7 +4647,7 @@ var PASSAGES=[
 var SENTS=[ // swap：呢兩個字塊調轉次序都照計分
  {th:'ทุกคนเรียนภาษากวางตุ้งด้วยกัน สนุกมาก',
   t:[['大家','daai6 gaa1','代詞'],['一齊','jat1 cai4','副詞'],['學','hok6','動詞'],['廣東話','gwong2 dung1 waa2','名詞'],['好','hou2','副詞'],['開心','hoi1 sam1','形容詞','。']]},
- {th:'ลิงตัวนี้ยืนอยู่ใต้ต้นแอปเปิล มองแอปเปิลแล้วอยากกินมาก',
+ {th:'ลิงตัวนี้ยืนอยู่ใต้ต้นแอปเปิล มองแอปเปิลแล้วอยากกินมาก',alts:[[0,1,2,4,5,6,3,7,8,9,10,11,12]],
   t:[['呢','ni1','指示詞'],['隻','zek3','量詞'],['馬騮','maa5 lau1','名詞'],['企','kei5','動詞'],['喺','hai2','介詞'],['蘋果樹','ping4 gwo2 syu6','名詞'],['下面','haa6 min6','方位詞','，'],['望住','mong6 zyu6','動詞'],['啲','di1','量詞'],['蘋果','ping4 gwo2','名詞'],['好','hou2','副詞'],['想','soeng2','助動詞'],['食','sik6','動詞','。']]},
  {th:'น้องชายตื่นกลางดึกนอนไม่หลับ เลยไปออกกำลังกาย',swap:[0,1],
   t:[['細佬','sai3 lou2','名詞'],['半夜','bun3 je6','時間詞'],['起身','hei2 san1','動詞'],['瞓唔着','fan3 m4 zoek6','動詞','，'],['去','heoi3','動詞'],['咗','zo2','助詞'],['做','zou6','動詞'],['運動','wan6 dung6','名詞','。']]},
@@ -4574,6 +4667,34 @@ var OPP=[
  {s:'對面間屋非常舊',th:'บ้านหลังฝั่งตรงข้ามเก่ามาก',cw:'屋',c:['間','條','本'],aw:'舊',o:['新','平']},
  {s:'媽媽杯茶唔熱喇',th:'ชาแก้วของแม่ไม่ร้อนแล้ว',cw:'茶',c:['杯','本','條'],aw:'熱',o:['凍','甜']},
  {s:'今日個天好黑',th:'วันนี้ท้องฟ้ามืดมาก',cw:'天',c:['個','條','張'],aw:'黑',o:['白','暗']}
+];
+
+/* 聽力選項嘅泰文 */
+var OTH={'70歲':'อายุ 70 ปี','17歲':'อายุ 17 ปี','60歲':'อายุ 60 ปี','80歲':'อายุ 80 ปี',
+ '貓、狗同雀仔':'แมว สุนัข และนก','貓、狗同魚':'แมว สุนัข และปลา','貓、兔仔同雀仔':'แมว กระต่าย และนก','狗、雀仔同青蛙':'สุนัข นก และกบ',
+ '因為每日都聽到佢哋叫':'เพราะได้ยินเสียงร้องของพวกมันทุกวัน','因為佢哋夜晚唔瞓覺':'เพราะพวกมันไม่นอนตอนกลางคืน','因為佢哋成日走嚟走去':'เพราะพวกมันวิ่งไปวิ่งมาตลอด','因為佢哋好鍾意食嘢':'เพราะพวกมันชอบกินมาก',
+ '又高又瘦嘅香港人':'คนฮ่องกงที่สูงและผอม','又矮又肥嘅香港人':'คนฮ่องกงที่เตี้ยและอ้วน','又高又瘦嘅泰國人':'คนไทยที่สูงและผอม','又高又肥嘅日本人':'คนญี่ปุ่นที่สูงและอ้วน',
+ '廁所':'ห้องน้ำ','廚房':'ห้องครัว','房間':'ห้องนอน','公園':'สวนสาธารณะ',
+ '七分鐘':'7 นาที','十七分鐘':'17 นาที','五分鐘':'5 นาที','十分鐘':'10 นาที',
+ '因為星期五啲嘢平啲':'เพราะวันศุกร์ของถูกกว่า','因為星期五放假':'เพราะวันศุกร์เป็นวันหยุด','因為星期五有好多新嘢':'เพราะวันศุกร์มีของใหม่เยอะ','因為星期五超級市場更大':'เพราะวันศุกร์ซูเปอร์มาร์เก็ตใหญ่ขึ้น',
+ '星期四九點':'วันพฤหัสบดี 9 โมง','星期四十點':'วันพฤหัสบดี 10 โมง','星期三九點':'วันพุธ 9 โมง','星期五九點':'วันศุกร์ 9 โมง',
+ '同朋友玩一個鐘':'เล่นกับเพื่อนหนึ่งชั่วโมง','同朋友食飯':'กินข้าวกับเพื่อน','睇醫生':'ไปหาหมอ','買餸':'ซื้อกับข้าว',
+ '十點鐘':'4 ทุ่ม (22:00 น.)','九點鐘':'3 ทุ่ม (21:00 น.)','十一點鐘':'5 ทุ่ม (23:00 น.)','十二點鐘':'เที่ยงคืน (24:00 น.)'};
+/* 量詞／相反詞：粵拼 */
+var JPW={'條':'tiu4','件':'gin6','張':'zoeng1','碗':'wun2','杯':'bui1','隻':'zek3','本':'bun2','間':'gaan1','首':'sau2','個':'go3',
+ '醜':'cau2','矮':'ai2','臭':'cau3','甜':'tim4','大':'daai6','長':'coeng4','少':'siu2','高':'gou1','薄':'bok6','輕':'hing1','肥':'fei4','新':'san1','平':'peng4','凍':'dung3','白':'baak6','暗':'am3'};
+/* 每句分詞：[字,粵拼,標記]；標記 c＝量詞（(a)題變成 X）、a＝要問相反詞嘅形容詞；cj/aj＝題目詞嘅粵拼 */
+var OPPX=[
+ {cj:'fu3',aj:'leng3',seg:[['妹妹','mui6 mui2'],['着住','zoek3 zyu6'],['一','jat1'],['條','tiu4','c'],['好','hou2'],['靚','leng3','a'],['嘅','ge3'],['黃色','wong4 sik1'],['褲','fu3']]},
+ {cj:'faan6',aj:'hoeng1',seg:[['隔離','gaak3 lei4'],['碗','wun2','c'],['飯','faan6'],['真係','zan1 hai6'],['好','hou2'],['香','hoeng1','a']]},
+ {cj:'maau1',aj:'sai3',seg:[['三','saam1'],['隻','zek3','c'],['貓','maau1'],['都','dou1'],['好','hou2'],['細','sai3','a'],['隻','zek3','c']]},
+ {cj:'hok6 haau6',aj:'do1',seg:[['前面','cin4 min6'],['間','gaan1','c'],['學校','hok6 haau6'],['有','jau5'],['好','hou2'],['多','do1','a'],['學生','hok6 saang1']]},
+ {cj:'go1',aj:'dyun2',seg:[['聽','teng1'],['一','jat1'],['首','sau2','c'],['歌','go1'],['用','jung6'],['好','hou2'],['短','dyun2','a'],['時間','si4 gaan3'],['啫','ze1']]},
+ {cj:'syu1',aj:'hau5',seg:[['枱面','toi2 min6'],['上','soeng6'],['五','ng5'],['本','bun2','c'],['書','syu1'],['都','dou1'],['幾','gei2'],['厚','hau5','a']]},
+ {cj:'se5 gung1',aj:'gou1',seg:[['嗰','go2'],['個','go3','c'],['社工','se5 gung1'],['生得','saang1 dak1'],['好','hou2'],['高','gou1','a']]},
+ {cj:'uk1',aj:'gau6',seg:[['對面','deoi3 min6'],['間','gaan1','c'],['屋','uk1'],['非常','fei1 soeng4'],['舊','gau6','a']]},
+ {cj:'caa4',aj:'jit6',seg:[['媽媽','maa1 maa1'],['杯','bui1','c'],['茶','caa4'],['唔','m4'],['熱','jit6','a'],['喇','laa3']]},
+ {cj:'tin1',aj:'hak1',seg:[['今日','gam1 jat6'],['個','go3','c'],['天','tin1'],['好','hou2'],['黑','hak1','a']]}
 ];
 
 function q(s){return ROOT.querySelector(s);}
@@ -4617,7 +4738,7 @@ function buildQuiz(pool){
     return {ch:w[0],zh:w[1],jp:w[2],opts:opts,ans:opts.indexOf(w[3])};
   });
   var listen=[];
-  PASSAGES.forEach(function(p,pi){p.qs.forEach(function(x){var opts=shuffle(x.opts);listen.push({pi:pi,q:x.q,th:x.th,opts:opts,ans:opts.indexOf(x.opts[0])});});});
+  PASSAGES.forEach(function(p,pi){p.qs.forEach(function(x){var opts=shuffle(x.opts.map(function(o){return [o,OTH[o]||''];}));listen.push({pi:pi,q:x.q,th:x.th,opts:opts,ans:opts.map(function(o){return o[0];}).indexOf(x.opts[0])});});});
   var opp=OPP.map(function(x){var oc=shuffle(x.c),oo=shuffle(x.o);return {oc:oc,cAns:oc.indexOf(x.c[0]),oo:oo,oAns:oo.indexOf(x.o[0])};});
   var sent=SENTS.map(function(s){
     var id=s.t.map(function(_,i){return i;}),o=shuffle(id),n=0;
@@ -4668,7 +4789,17 @@ function renderSent(i){
   q('#qz2-pool'+i).innerHTML=pool.map(function(t){return tileHtml(i,t,false);}).join('');
 }
 function secHead(zh,th,pts){return '<div class="qz-sec">'+zh+' <span class="qz-th" style="font-size:14px;color:var(--mute)">'+th+'</span><span class="qz-spt">'+pts+'</span></div>';}
-function optBtns(k,i,opts,sel,cls){return opts.map(function(o,j){return '<button class="qz-opt '+cls+(sel===j?' on':'')+'" data-k="'+k+'" data-i="'+i+'" data-j="'+j+'">'+(cls==='qz-lopt'?'<b class="qz-let">'+'ABCD'[j]+'</b><span class="qz-oz">'+esc(o)+'</span>':esc(o))+'</button>';}).join('');}
+function optBtns(k,i,opts,sel,cls){return opts.map(function(o,j){
+  var inner=cls==='qz-lopt'?'<b class="qz-let">'+'ABCD'[j]+'</b><span class="qz-oz">'+esc(o[0])+(o[1]?'<span class="qz-oth qz-th">'+esc(o[1])+'</span>':'')+'</span>':cls==='qz-copt'?ruby(o,JPW[o]):esc(o);
+  return '<button class="qz-opt '+cls+(sel===j?' on':'')+'" data-k="'+k+'" data-i="'+i+'" data-j="'+j+'">'+inner+'</button>';}).join('');}
+/* 句子（含粵拼）：mode 'c'＝量詞變 X；'a'＝標出要問相反詞嘅字；'full'＝完整 */
+function oppSent(i,mode){
+  return OPPX[i].seg.map(function(g){
+    if(mode==='c'&&g[2]==='c')return '<span class="qz-blank">X</span>';
+    if(mode==='a'&&g[2]==='a')return '<mark class="qz-hl">'+ruby(g[0],g[1])+'</mark>';
+    return ruby(g[0],g[1]);
+  }).join('');
+}
 function render(){
   ROOT.classList.remove('qz-pm');
   var Q=Z.quiz,nL=Q.listen.length,nV=Q.vocab.length,nR=SENTS.length,nO=Q.opp.length;
@@ -4688,16 +4819,16 @@ function render(){
   });
   h+='</div>';
   h+=secHead('三、句子重組','เรียงประโยค',nR+'題 × '+PTS.sent+'分 = '+nR*PTS.sent+'分');
-  h+='<p class="qz-sub">按泰文意思，將字塊砌成正確句子。撳已揀嘅字塊可以放返落去。<br><span class="qz-th">เรียงคำให้เป็นประโยคตามความหมายภาษาไทย แตะคำที่เลือกแล้วเพื่อเอาออก</span></p>';
+  h+='<p class="qz-sub">按泰文意思，將字塊砌成正確句子。撳字塊加入，<b>亦可以拖拉字塊改次序</b>（拖出答案欄＝取消），唔洗重頭嚟過。<br><span class="qz-th">เรียงคำให้เป็นประโยคตามความหมายภาษาไทย แตะคำเพื่อเพิ่ม หรือ<b>ลากคำเพื่อสลับตำแหน่ง</b> (ลากออกนอกช่อง = เอาออก) ไม่ต้องเริ่มใหม่</span></p>';
   SENTS.forEach(function(s,i){
     h+='<div class="qz-card"><div class="qz-qt"><span class="qz-num">'+(i+1)+'.</span></div><div class="qz-thai-s qz-th">'+esc(s.th)+'</div><div class="qz-ans" id="qz2-ans'+i+'"></div><div class="qz-pool" id="qz2-pool'+i+'"></div><div class="qz-rs"><button class="qz-btn ghost" data-reset="'+i+'" style="padding:6px 12px;font-size:12px">↺ 重來 / เริ่มใหม่</button></div></div>';
   });
   h+=secHead('四、相反詞 + 量詞','คำตรงข้าม + ลักษณนาม',nO+'題 × '+PTS.opp*2+'分 = '+nO*PTS.opp*2+'分');
   h+='<p class="qz-sub">睇句子同泰文意思：(a) 揀量詞（'+PTS.opp+'分）；(b) 揀相反詞（'+PTS.opp+'分）。<br><span class="qz-th">อ่านประโยคและความหมายภาษาไทย (a) เลือกลักษณนาม (b) เลือกคำตรงข้าม ข้อละ '+PTS.opp+' คะแนน</span></p>';
-  Q.opp.forEach(function(x,i){var O=OPP[i];
-    h+='<div class="qz-card"><div class="qz-qt"><span class="qz-num">'+(i+1)+'.</span></div><div class="qz-osent qz-zh">'+esc(O.s)+'</div><div class="qz-thai-s qz-th">'+esc(O.th)+'</div>'+
-      '<div class="qz-q"><div class="qz-qt"><span>(a) 「'+esc(O.cw)+'」嘅量詞係？</span><span class="qz-thq qz-th">ลักษณนามของ「'+esc(O.cw)+'」คือข้อใด</span></div><div class="qz-opts qz-cols">'+optBtns('oppc',i,x.oc,Z.ans.oppc[i],'qz-copt')+'</div></div>'+
-      '<div class="qz-q"><div class="qz-qt"><span>(b) 「'+esc(O.aw)+'」嘅相反詞係？</span><span class="qz-thq qz-th">คำตรงข้ามของ「'+esc(O.aw)+'」คือข้อใด</span></div><div class="qz-opts qz-cols">'+optBtns('oppo',i,x.oo,Z.ans.oppo[i],'qz-copt')+'</div></div></div>';
+  Q.opp.forEach(function(x,i){var O=OPP[i],X=OPPX[i];
+    h+='<div class="qz-card"><div class="qz-qt"><span class="qz-num">'+(i+1)+'.</span></div><div class="qz-thai-s qz-th">'+esc(O.th)+'</div>'+
+      '<div class="qz-q"><div class="qz-osent qz-zh">'+oppSent(i,'c')+'</div><div class="qz-qt"><span>(a) 「'+ruby(O.cw,X.cj)+'」'+ruby('嘅','ge3')+ruby('量詞','loeng6 ci4')+ruby('係','hai6')+'？</span><span class="qz-thq qz-th">ลักษณนามของ「'+esc(O.cw)+'」คือข้อใด (X = ช่องว่างลักษณนาม)</span></div><div class="qz-opts qz-cols">'+optBtns('oppc',i,x.oc,Z.ans.oppc[i],'qz-copt')+'</div></div>'+
+      '<div class="qz-q"><div class="qz-osent qz-zh">'+oppSent(i,'a')+'</div><div class="qz-qt"><span>(b) 「'+ruby(O.aw,X.aj)+'」'+ruby('嘅','ge3')+ruby('相反詞','soeng1 faan2 ci4')+ruby('係','hai6')+'？</span><span class="qz-thq qz-th">คำตรงข้ามของ「'+esc(O.aw)+'」คือข้อใด</span></div><div class="qz-opts qz-cols">'+optBtns('oppo',i,x.oo,Z.ans.oppo[i],'qz-copt')+'</div></div></div>';
   });
   h+='<button class="qz-btn big" id="qz2-submit">提交測驗 · ส่งข้อสอบ</button><p class="qz-note">時間到會自動提交 · หมดเวลาจะส่งอัตโนมัติ</p>';
   ROOT.innerHTML=h;
@@ -4755,8 +4886,10 @@ function stopTick(){clearInterval(ticking);ticking=null;var t=chipEl();if(t){t.s
 function sentOK(s,i){
   var a=Z.ans.sent[i]; if(a.length!==s.t.length)return false;
   if(a.every(function(v,k){return v===k;}))return true;
-  if(s.swap){var b=s.t.map(function(_,k){return k;});b[s.swap[0]]=s.swap[1];b[s.swap[1]]=s.swap[0];return a.every(function(v,k){return v===b[k];});}
-  return false;
+  var ok=[];
+  if(s.swap){var b=s.t.map(function(_,k){return k;});b[s.swap[0]]=s.swap[1];b[s.swap[1]]=s.swap[0];ok.push(b);}
+  (s.alts||[]).forEach(function(o){ok.push(o);});   // alts：其他都接受嘅完整次序
+  return ok.some(function(o){return a.every(function(v,k){return v===o[k];});});
 }
 function scoreAll(){
   var Q=Z.quiz,a=Z.ans;
@@ -4779,7 +4912,7 @@ function report(sc,auto){
   out.push('離開頁面次數：'+(Z.leaves||0));
   out.push('提交時間：'+new Date(Z.endAt).toLocaleString('zh-HK',{timeZone:'Asia/Hong_Kong'}));
   out.push('\n【一、聽力】');
-  Q.listen.forEach(function(x,i){out.push((i+1)+'. [第'+(x.pi+1)+'段] '+x.q+' → '+(a.listen[i]==null?'(未答)':x.opts[a.listen[i]])+' '+(a.listen[i]===x.ans?'✓':'✗（正確：'+x.opts[x.ans]+'）'));});
+  Q.listen.forEach(function(x,i){out.push((i+1)+'. [第'+(x.pi+1)+'段] '+x.q+' → '+(a.listen[i]==null?'(未答)':x.opts[a.listen[i]][0])+' '+(a.listen[i]===x.ans?'✓':'✗（正確：'+x.opts[x.ans][0]+'）'));});
   out.push('\n【二、詞彙】');
   Q.vocab.forEach(function(x,i){out.push((i+1)+'. [L'+x.ch+'] '+x.zh+' → '+(a.vocab[i]==null?'(未答)':x.opts[a.vocab[i]])+' '+(a.vocab[i]===x.ans?'✓':'✗（正確：'+x.opts[x.ans]+'）'));});
   out.push('\n【三、句子重組】');
@@ -4835,11 +4968,12 @@ function chip(got,max){return '<span class="qz-pts '+(got===max?'right':got===0?
 function renderPaper(){
   var Q=Z.quiz,a=Z.ans,sc=scoreAll(),end=Z.endAt||Date.now();
   var used=Math.min(CFG.DURATION_MIN*60,Math.round((end-Z.start)/1000)),pct=Math.round(sc.total/sc.maxAll*100),LT='ABCD';
-  var optList=function(opts,ans,mine,thai){
+  var optList=function(opts,ans,mine,thai,fmt){
+    fmt=fmt||esc;
     return '<ul class="qz-po">'+opts.map(function(o,j){
       var c=j===ans?'corr':(j===mine?'bad':'');
       var tag=j===ans?'<span class="qz-tag">✓ 正確答案</span>':(j===mine?'<span class="qz-tag">✗ 你嘅答案</span>':'');
-      return '<li class="'+c+(thai?' qz-th':'')+'">'+LT[j]+'. '+esc(o)+(j===ans&&j===mine?'<span class="qz-tag"> · 你嘅答案</span>':'')+tag+'</li>';
+      return '<li class="'+c+(thai?' qz-th':'')+'">'+LT[j]+'. '+fmt(o)+(j===ans&&j===mine?'<span class="qz-tag"> · 你嘅答案</span>':'')+tag+'</li>';
     }).join('')+'</ul>'+(mine==null?'<div class="qz-th" style="color:var(--red);font-size:13px;margin-top:4px">未作答 · ไม่ได้ตอบ</div>':'');
   };
   var h='<div class="qz-vbar"><span class="qz-fn">課堂測驗(二)_第8-14課_'+esc(Z.name||'')+'.pdf</span><span class="qz-st wait" id="qz2-stat"></span><button id="qz2-resend" style="display:none">重新傳送</button><button id="qz2-print">🖨 儲存 PDF</button></div><div class="qz-paper">';
@@ -4850,7 +4984,7 @@ function renderPaper(){
   PASSAGES.forEach(function(p,pi){
     h+='<div class="qz-scr"><b>第 '+(pi+1)+' 段錄音內容：</b>'+esc(p.text)+'</div>';
     Q.listen.forEach(function(x,i){if(x.pi!==pi)return;var g=a.listen[i]===x.ans;
-      h+='<div class="qz-pq '+(g?'right':'wrong')+'"><div class="qz-pqh">'+mk(g)+'<span>'+(i+1)+'. '+esc(x.q)+'<small>'+esc(x.th)+'</small></span>'+chip(g?PTS.listen:0,PTS.listen)+'</div>'+optList(x.opts,x.ans,a.listen[i],false)+'</div>';});
+      h+='<div class="qz-pq '+(g?'right':'wrong')+'"><div class="qz-pqh">'+mk(g)+'<span>'+(i+1)+'. '+esc(x.q)+'<small>'+esc(x.th)+'</small></span>'+chip(g?PTS.listen:0,PTS.listen)+'</div>'+optList(x.opts,x.ans,a.listen[i],false,function(o){return esc(o[0])+(o[1]?' <span class="qz-th qz-pth">· '+esc(o[1])+'</span>':'');})+'</div>';});
   });
   h+='<div class="qz-psec"><span>二、詞彙選擇題 <small class="qz-th">คำศัพท์</small></span><small>'+sc.V+' / '+sc.max.V+'</small></div>';
   Q.vocab.forEach(function(x,i){var g=a.vocab[i]===x.ans;
@@ -4862,12 +4996,12 @@ function renderPaper(){
       '<div class="qz-srow"><b>你嘅答案</b><div class="qz-stiles '+(g?'good':'mine-bad')+'">'+(a.sent[i].length?row(a.sent[i]):'<span class="qz-th" style="font-size:14px;color:var(--red)">未作答 · ไม่ได้ตอบ</span>')+'</div></div>'+
       (g?'':'<div class="qz-srow"><b>正確答案</b><div class="qz-stiles ans-ok">'+row(s.t.map(function(_,k){return k;}))+'</div></div>')+'</div>';});
   h+='<div class="qz-psec"><span>四、相反詞 + 量詞 <small class="qz-th">คำตรงข้าม + ลักษณนาม</small></span><small>'+sc.O+' / '+sc.max.O+'</small></div>';
-  Q.opp.forEach(function(x,i){var O=OPP[i];
+  Q.opp.forEach(function(x,i){var O=OPP[i],X=OPPX[i],rj=function(o){return ruby(o,JPW[o]);};
     var okc=a.oppc[i]===x.cAns,oko=a.oppo[i]===x.oAns,got=((okc?1:0)+(oko?1:0))*PTS.opp,cls=got===2*PTS.opp?'right':got===0?'wrong':'half';
     h+='<div class="qz-pq '+cls+'"><div class="qz-pqh">'+(cls==='right'?mk(true):cls==='wrong'?mk(false):'<span class="qz-mk half">½</span>')+'<span>'+(i+1)+'.</span>'+chip(got,2*PTS.opp)+'</div>'+
-      '<div class="qz-vw" style="font-size:20px">'+esc(O.s)+'</div><div class="qz-thp">'+esc(O.th)+'</div>'+
-      '<div class="qz-sub2">'+mk(okc)+'<span>(a)「'+esc(O.cw)+'」嘅量詞</span>'+chip(okc?PTS.opp:0,PTS.opp)+'</div>'+optList(x.oc,x.cAns,a.oppc[i],false)+
-      '<div class="qz-sub2">'+mk(oko)+'<span>(b)「'+esc(O.aw)+'」嘅相反詞</span>'+chip(oko?PTS.opp:0,PTS.opp)+'</div>'+optList(x.oo,x.oAns,a.oppo[i],false)+'</div>';});
+      '<div class="qz-vw" style="font-size:20px">'+oppSent(i,'full')+'</div><div class="qz-thp">'+esc(O.th)+'</div>'+
+      '<div class="qz-sub2">'+mk(okc)+'<span>(a)「'+ruby(O.cw,X.cj)+'」嘅量詞</span>'+chip(okc?PTS.opp:0,PTS.opp)+'</div>'+optList(x.oc,x.cAns,a.oppc[i],false,rj)+
+      '<div class="qz-sub2">'+mk(oko)+'<span>(b)「'+ruby(O.aw,X.aj)+'」嘅相反詞</span>'+chip(oko?PTS.opp:0,PTS.opp)+'</div>'+optList(x.oo,x.oAns,a.oppo[i],false,rj)+'</div>';});
   h+='<div class="qz-foot">— 完 · จบ —<br>此試卷已提交，唯讀 · ส่งแล้ว ไม่สามารถแก้ไขได้</div></div>';
   ROOT.classList.add('qz-pm');
   ROOT.innerHTML=h;
@@ -4914,6 +5048,7 @@ ROOT.addEventListener('click',function(e){
   var p=t.closest('[data-play]'); if(p)return play(+p.dataset.p,p.dataset.play);
   if(t.closest('#qz2-submit'))return submit(false);
 });
+if(window.qzDrag)window.qzDrag(ROOT,'qz2-',{active:inProgress,arr:function(si){return Z.ans.sent[si];},change:function(si){renderSent(si);save();}});
 ROOT.addEventListener('input',function(e){if(e.target.id==='qz2-nm'&&Z){Z.name=e.target.value;save();}});
 
 /* 同主 App 接口：接上測驗（一）已定義嘅 hook */
