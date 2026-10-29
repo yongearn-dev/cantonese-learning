@@ -893,7 +893,21 @@ body.qz-print #qz2-root .qz-paper{box-shadow:none;margin:0;max-width:none;paddin
 #qz2-root ruby{margin:0 2px}
 #qz2-root .qz-osent ruby{margin:0 5px}
 #qz2-root .qz-qt ruby{margin:0 3px}
-#qz2-root .qz-osent rt{font-size:.42em}
+/* 相反詞／量詞：粵拼放大（大過中文字） */
+#qz2-root .qz-osent{font-size:26px;line-height:2.6;margin:6px 0 12px}
+#qz2-root .qz-osent ruby{margin:0 6px}
+#qz2-root .qz-osent rt,#qz2-root .qz-copt rt,#qz2-root .qz-qt ruby rt,#qz2-root .qz-sub2 rt,#qz2-root .qz-po rt{font:700 1.15em 'Nunito','Noto Sans TC',sans-serif;color:#8a4b00;letter-spacing:0}
+#qz2-root .qz-osent rt{font-size:25px}
+#qz2-root .qz-copt{font-size:24px;padding:24px 6px 10px;line-height:1.9}
+#qz2-root .qz-copt rt{font-size:25px}
+#qz2-root .qz-qt ruby{margin:0 6px}
+#qz2-root .qz-qt ruby rt{font-size:21px}
+#qz2-root .qz-pq .qz-vw[style] rt{font:700 26px 'Nunito','Noto Sans TC',sans-serif;color:#8a4b00}
+#qz2-root .qz-pq .qz-vw[style]{line-height:2.4}
+#qz2-root .qz-po li{line-height:2.2}
+#qz2-root .qz-sub2{line-height:2.2}
+@media(max-width:640px){#qz2-root .qz-osent{font-size:22px}#qz2-root .qz-osent rt{font-size:22px}#qz2-root .qz-osent ruby{margin:0 5px}#qz2-root .qz-copt rt{font-size:22px}#qz2-root .qz-qt ruby rt{font-size:17px}}
+#qz2-root ruby{white-space:nowrap}#qz2-root rt{white-space:nowrap}
 
 
 </style>
@@ -4795,7 +4809,7 @@ function optBtns(k,i,opts,sel,cls){return opts.map(function(o,j){
 /* 句子（含粵拼）：mode 'c'＝量詞變 X；'a'＝標出要問相反詞嘅字；'full'＝完整 */
 function oppSent(i,mode){
   return OPPX[i].seg.map(function(g){
-    if(mode==='c'&&g[2]==='c')return '<span class="qz-blank">X</span>';
+    if((mode==='c'||mode==='a')&&g[2]==='c')return '<span class="qz-blank">X</span>';   // 量詞兩題都用 X，唔俾睇到答案
     if(mode==='a'&&g[2]==='a')return '<mark class="qz-hl">'+ruby(g[0],g[1])+'</mark>';
     return ruby(g[0],g[1]);
   }).join('');
