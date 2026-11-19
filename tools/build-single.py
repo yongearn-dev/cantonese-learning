@@ -8,6 +8,9 @@ def js(m):
     code=open(os.path.join(root,m.group(2)),encoding='utf-8').read()
     return '<script'+m.group(1)+'>\n'+code+'</script>'
 s=re.sub(r'<script([^>]*?) src="(js/[^"?]+)(?:\?[^"]*)?"></script>',js,s)
+def css(m):
+    return '<style>'+open(os.path.join(root,m.group(1)),encoding='utf-8').read()+'</style>'
+s=re.sub(r'<link rel="stylesheet" href="(css/[^"?]+)(?:\?[^"]*)?">',css,s)
 def img(m):
     b=base64.b64encode(open(os.path.join(root,m.group(1)),'rb').read()).decode()
     return '"data:image/webp;base64,'+b+'"'
