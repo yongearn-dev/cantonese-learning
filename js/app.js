@@ -2245,8 +2245,10 @@ function renderLessonBody(l){
   const lk=vocabKeyOf(l);
   const words=S.data.vocab.filter(w=>w._type===lk.type&&w._num===lk.num);
   if(words.length){
-    html+='<div class="lc-section"><div class="lc-label">📚 本課詞彙（'+words.length+'）</div><div class="lc-vocab-grid">'
-      +words.map(w=>'<div class="lc-vocab-item"><div class="lc-vocab-jyut">'+w.jyutping+'</div><div class="lc-vocab-char">'+w.char+'</div><div class="lc-vocab-thai">'+w.thai+'</div></div>').join('')
+    const SHOW=3;   // 每課只顯示 3 個（隨機抽）；想改數量改呢個數字，閃卡練習仍然用晒全部詞彙
+    const shown=words.length>SHOW?words.map(w=>[Math.random(),w]).sort((a,b)=>a[0]-b[0]).slice(0,SHOW).map(x=>x[1]):words;
+    html+='<div class="lc-section"><div class="lc-label">📚 本課詞彙'+(words.length>SHOW?'（抽 '+SHOW+' 個，共 '+words.length+'）':'（'+words.length+'）')+'</div><div class="lc-vocab-grid">'
+      +shown.map(w=>'<div class="lc-vocab-item"><div class="lc-vocab-jyut">'+w.jyutping+'</div><div class="lc-vocab-char">'+w.char+'</div><div class="lc-vocab-thai">'+w.thai+'</div></div>').join('')
       +'</div><button class="unlock-btn" style="margin-top:10px" onclick="practiceLessonVocab(\''+l._key+'\')">🃏 用閃卡練習呢課詞彙</button></div>';
   }
   return html||'<div style="font-size:13px;color:var(--text-muted)">暫冇額外材料</div>';

@@ -12,12 +12,12 @@ var THAI1=/[฀-๿]/;
 var THAIRUN=/[฀-๿][฀-๿\d\s.,?!:;()"'“”‘’\-–—\/%…]*/g;
 var SYLT=/^[a-z]{1,7}[1-6]$/i;
 var SKIP_TAG={SCRIPT:1,STYLE:1,TEXTAREA:1,INPUT:1,SELECT:1,OPTION:1,SVG:1,CANVAS:1,NOSCRIPT:1,RT:1,TITLE:1};
-var ZONE_NORB='#pj-root,#qz-root,#qz2-root,#qz3-root,#qz4-root,#page-ai';      // 唔補粵拼
-var ZONE_NOTH='#pj-root,#qz-root,#qz2-root,#qz3-root,#qz4-root,#page-ai';      // 唔收埋泰文
+var ZONE_NORB='#pj-root,#qz-root,#qz2-root,#qz3-root,#qz4-root,#qz5-root,#page-ai';      // 唔補粵拼
+var ZONE_NOTH='#pj-root,#qz-root,#qz2-root,#qz3-root,#qz4-root,#qz5-root,#page-ai';      // 唔收埋泰文
 window.__jyr={mismatch:[],miss:{}};
 
 function inZone(el,sel){return !!(el&&el.closest&&el.closest(sel));}
-var EXAM='#qz-root,#qz2-root,#qz3-root,#qz4-root';
+var EXAM='#qz-root,#qz2-root,#qz3-root,#qz4-root,#qz5-root';
 function noEdit(el){return inZone(el,'#pj-root,#page-ai')||(inZone(el,EXAM)&&!el.closest('.qz-intro'));}   // 粵拼頁、AI、測驗題目唔改
 function sylsOf(t){                    // 純粵拼行？→ 音節陣列；唔係就 null
   t=(t||'').trim();

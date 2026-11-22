@@ -4,10 +4,10 @@ var cur=1;
 function R(n){return document.getElementById(n===1?'qz-root':'qz'+n+'-root');}
 window.qzHubRefresh=function(){
   var E=window.qzExams||{},busy=0;
-  [1,2,3,4].forEach(function(n){try{if(E[n]&&E[n].prog())busy=n;}catch(e){}});
+  [1,2,3,4,5].forEach(function(n){try{if(E[n]&&E[n].prog())busy=n;}catch(e){}});
   if(busy)cur=busy;
   bar.style.display=busy?'none':'';
-  [1,2,3,4].forEach(function(n){var r=R(n);if(r)r.style.display=cur===n?'':'none';});
+  [1,2,3,4,5].forEach(function(n){var r=R(n);if(r)r.style.display=cur===n?'':'none';});
   bar.querySelectorAll('button').forEach(function(b){b.classList.toggle('on',+b.dataset.exam===cur);});
 };
 bar.addEventListener('click',function(e){

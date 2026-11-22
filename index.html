@@ -680,7 +680,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
   #navCards{grid-template-columns:repeat(4,1fr)}
 }
 </style>
-<link rel="stylesheet" href="css/quiz.css?v=20261119">
+<link rel="stylesheet" href="css/quiz.css?v=20261120">
 <style>/* ══ 粵拼表（由 jyutping.html 併入，重新排版）══ */
 #jc-root{max-width:540px;margin:0 auto;padding-bottom:20px}
 #jc-root .jc-title{background:var(--surface2,#E7E6D6);border-radius:12px;padding:10px 14px;text-align:center;font-weight:800;font-size:16px;margin-bottom:14px;font-family:'Noto Sans TC','Noto Sans Thai',sans-serif}
@@ -750,7 +750,7 @@ html.hide-th .thx{display:none!important}
 #gl-tog .ck{font-style:normal}
 #togJyut,#togThai{display:none!important}
 .nav-sub{display:none}
-#qz-root .qz-intro rt[data-j],#qz2-root .qz-intro rt[data-j],#qz3-root .qz-intro rt[data-j],#qz4-root .qz-intro rt[data-j]{font:700 10px var(--f-jy);color:var(--accent,#0E6B57);letter-spacing:0;line-height:1.15}
+#qz-root .qz-intro rt[data-j],#qz2-root .qz-intro rt[data-j],#qz3-root .qz-intro rt[data-j],#qz4-root .qz-intro rt[data-j],#qz5-root .qz-intro rt[data-j]{font:700 10px var(--f-jy);color:var(--accent,#0E6B57);letter-spacing:0;line-height:1.15}
 
 </style>
 </head>
@@ -966,11 +966,12 @@ html.hide-th .thx{display:none!important}
 
   <!-- GAME -->
   <div class="page" id="page-quiz">
-    <div id="qz-hub"><button data-exam="1" class="on">📝 測驗（一）<small>第1–7課 · cak1 jim6 jat1</small></button><button data-exam="2">📝 測驗（二）A卷<small>第8–14課 · cak1 jim6 ji6</small></button><button data-exam="3">📝 測驗（二）B卷<small>第8–14課 · cak1 jim6 ji6</small></button><button data-exam="4">📝 測驗（三）<small>第15–19課 · cak1 jim6 saam1</small></button></div>
+    <div id="qz-hub"><button data-exam="1" class="on">📝 測驗（一）<small>第1–7課 · cak1 jim6 jat1</small></button><button data-exam="2">📝 測驗（二）A卷<small>第8–14課 · cak1 jim6 ji6</small></button><button data-exam="3">📝 測驗（二）B卷<small>第8–14課 · cak1 jim6 ji6</small></button><button data-exam="4">📝 測驗（三）A卷<small>第15–19課 · cak1 jim6 saam1</small></button><button data-exam="5">📝 測驗（三）B卷<small>第15–19課 · cak1 jim6 saam1</small></button></div>
     <div id="qz-root"></div>
     <div id="qz2-root" style="display:none"></div>
     <div id="qz3-root" style="display:none"></div>
     <div id="qz4-root" style="display:none"></div>
+    <div id="qz5-root" style="display:none"></div>
   </div>
 
   <div class="page" id="page-game">
@@ -1011,15 +1012,22 @@ html.hide-th .thx{display:none!important}
 </div><!-- /content -->
 </div><!-- /app -->
 
-<script src="js/app.js?v=20261119"></script>
+<script src="js/app.js?v=20261121"></script>
 <script src="js/jyutping-practice.js?v=20261119"></script>
 <script src="js/vocab-read-aloud.js?v=20261119"></script>
 <script src="js/soundalike.js?v=20261119"></script>
 <script src="js/quiz-hub.js?v=20261119"></script>
+<script src="js/quiz-attempts.js?v=20261120"></script>
+<script src="js/data/quiz-l1-7.data.js?v=20261119"></script>
 <script src="js/quiz-l1-7.js?v=20261119"></script>
+<script src="js/data/quiz-l8-14a.data.js?v=20261119"></script>
 <script src="js/quiz-l8-14a.js?v=20261119"></script>
+<script src="js/data/quiz-l8-14b.data.js?v=20261119"></script>
 <script src="js/quiz-l8-14b.js?v=20261119"></script>
-<script src="js/quiz-l15-19.js?v=20261119"></script>
+<script src="js/data/quiz-l15-19.data.js?v=20261120"></script>
+<script src="js/quiz-l15-19.js?v=20261120"></script>
+<script src="js/data/quiz-l15-19b.data.js?v=20261120"></script>
+<script src="js/quiz-l15-19b.js?v=20261120"></script>
 <script src="js/time.js?v=20261119"></script>
 <script src="js/direction.js?v=20261119"></script>
 <script src="js/antonym.js?v=20261119"></script>
