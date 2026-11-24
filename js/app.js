@@ -658,7 +658,7 @@ function buildSentence(){
   const ids=[...new Set(learnSens.map(x=>x.pid))];
   if(!ids.includes(S.ssPatternId))S.ssPatternId=ids[0];
   const mode=$('ssMode');mode.innerHTML='';
-  [['learn','📖 學習'],['game','🎮 重組句子'],['challenge','⏱ 重組挑戰']].forEach(([m,label])=>{
+  [['learn','📖 學習'],['game','🎮 重組句子'],['challenge','⏱ 重組挑戰'],['rearrange','🧩 重組練習']].forEach(([m,label])=>{
     const b=h('button','seg-btn'+(SG.mode===m?' act':''),label);
     b.addEventListener('click',()=>{if(SG.mode===m)return;chStop();CH.view='menu';SG.mode=m;if(m==='game')startSsGame();buildSentence();});
     mode.appendChild(b);
@@ -666,7 +666,10 @@ function buildSentence(){
   const learn=SG.mode==='learn';
   $('ssFilterBar').style.display=learn?'':'none';
   $('ssContent').style.display=learn?'':'none';
-  $('ssGame').style.display=learn?'none':'';
+  const raEl=$('ra-root'),isRa=SG.mode==='rearrange';
+  if(raEl)raEl.style.display=isRa?'':'none';
+  $('ssGame').style.display=(learn||isRa)?'none':'';
+  if(isRa){if(window.RA&&raEl)RA.mount(raEl);return;}
   if(!learn){
     if(SG.mode==='challenge'){renderChallenge();return;}
     if(!SG.queue.length)startSsGame();

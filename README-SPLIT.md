@@ -15,6 +15,8 @@ js/quiz-attempts.js   重考＋作答比較共用模組（QZA，紀錄存 localS
 js/quiz-l15-19.js     測驗（三）第15–19課 引擎工廠 window.QZ_L15(C)，A卷喺檔尾啟動（題目喺 js/data/quiz-l15-19.data.js）
 js/quiz-l15-19b.js    B卷：只係一行 QZ_L15({n:5,root:'qz5-root',prefix:'qz5-',data:'l15_19b'})（題目喺 js/data/quiz-l15-19b.data.js）
 js/time.js  direction.js  antonym.js  classifier.js  hobby.js  tones.js
+js/rearrange.js       「句式」頁第4個模式「🧩 重組練習」：讀 Google Sheet 三張表（ss_patterns／ss_words／ss_combos）即時生成新句；app.js buildSentence 會叫 RA.mount；用 APP_AWARD 計分
+css/rearrange.css     重組練習 CSS（全部限定 #ra-root）
 js/score-bridge.js    APP_AWARD／APP_LOGHIST（身體、家庭計分橋）
 js/body.js  family.js 身體、家庭（Shadow DOM）
 js/jy-engine.js       全站粵拼／泰文引擎＋補音字典 JYM（必須最後載入）

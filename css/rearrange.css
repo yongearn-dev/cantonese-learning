@@ -1,0 +1,40 @@
+/* 重組練習（句式頁第4個模式）。全部限定喺 #ra-root 入面 */
+#ra-root{font-size:15px;line-height:1.6;color:var(--text)}
+#ra-root *{box-sizing:border-box;margin:0;padding:0}
+#ra-root{--bg:#F1F0E4;--sf:#fff;--bd:#D9D6C4;--tx:#22261F;--sub:#666B5C;--ac:#0E6B57;--acb:#E3EFE9;--ye:#A9701C;--gn:#1D8A5C;--gnb:#E6F4EC;--rd:#C1402A;--rdb:#FAEAE4}
+#ra-root .st{font-size:12px;color:var(--sub);margin:4px 0 10px}
+#ra-root .card{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+#ra-root .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;font-size:13px}
+#ra-root select{flex:1;min-width:0;padding:7px;border:1px solid var(--bd);border-radius:8px;font:inherit;background:#fff}
+#ra-root label{display:flex;gap:4px;align-items:center;cursor:pointer}
+#ra-root .bt{padding:10px 14px;border-radius:10px;border:1.5px solid var(--bd);background:#fff;font:700 14px inherit;font-family:inherit;cursor:pointer}
+#ra-root .bt.pr{background:var(--ac);border-color:var(--ac);color:#fff}
+#ra-root .bt:disabled{opacity:.4;cursor:default}
+#ra-root .big{width:100%;font-size:16px;padding:13px}
+#ra-root .chip{display:inline-block;font:700 11px 'Nunito';background:var(--acb);color:var(--ac);padding:2px 9px;border-radius:10px;margin-bottom:6px}
+#ra-root .q{font:600 17px 'Noto Sans Thai';margin:2px 0 8px}
+#ra-root .sub{font-size:12px;color:var(--sub)}
+#ra-root .slots,#ra-root .pool{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+#ra-root .sl{min-width:64px;min-height:78px;border:2px dashed var(--bd);border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.5)}
+#ra-root .sl span{font:700 12px 'Nunito';color:var(--sub)}
+#ra-root .sl.f{border-style:solid;border-color:transparent;background:none}
+#ra-root .b{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:64px;padding:6px 10px;background:#fff;border:2px solid var(--bd);border-radius:10px;cursor:pointer;font-family:inherit;color:var(--tx)}
+#ra-root .b:disabled{cursor:default}
+#ra-root .b.ok{background:var(--gnb);border-color:var(--gn)!important}
+#ra-root .b.bad{background:var(--rdb);border-color:var(--rd)!important}
+#ra-root .zh{font:900 20px 'Noto Serif TC',serif}
+#ra-root .jy{font:600 11px 'Nunito';color:var(--ac);font-style:normal}
+#ra-root .th{font:400 11px 'Noto Sans Thai';color:var(--sub);font-style:normal}
+#ra-root .tg{font:700 10px 'Nunito'}
+#ra-root .msg{padding:8px 10px;border-radius:8px;font-size:14px;margin-bottom:10px;background:var(--gnb);color:var(--gn)}
+#ra-root .msg.bad{background:var(--rdb);color:var(--rd)}
+#ra-root .acts{display:flex;gap:8px;flex-wrap:wrap}
+#ra-root .res .zh{font-size:22px}
+#ra-root .res .j{font:600 13px 'Nunito';color:var(--ac)}
+#ra-root .res .t{font:15px 'Noto Sans Thai';color:var(--sub)}
+#ra-root .bad{color:var(--rd)}
+#ra-root summary{font-weight:700;cursor:pointer}
+#ra-root details p{font-size:13px;margin:6px 0}
+#ra-root table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+#ra-root td{border-top:1px solid var(--bd);padding:5px 4px;vertical-align:top}
+#ra-root td small{color:var(--ac);font-family:'Nunito'}
