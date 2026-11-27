@@ -681,7 +681,6 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto San
 }
 </style>
 <link rel="stylesheet" href="css/quiz.css?v=20261120">
-<link rel="stylesheet" href="css/rearrange.css?v=20261124">
 <style>/* ══ 粵拼表（由 jyutping.html 併入，重新排版）══ */
 #jc-root{max-width:540px;margin:0 auto;padding-bottom:20px}
 #jc-root .jc-title{background:var(--surface2,#E7E6D6);border-radius:12px;padding:10px 14px;text-align:center;font-weight:800;font-size:16px;margin-bottom:14px;font-family:'Noto Sans TC','Noto Sans Thai',sans-serif}
@@ -735,6 +734,7 @@ rt[data-j]::before{content:attr(data-j)}
 html.hide-jy rt,html.hide-jy .jyr-line{display:none!important}
 html.hide-th .thx{display:none!important}
 .hdr rt[data-j]{--jy-color:rgba(255,255,255,.85)}
+.tm-tab.act rt[data-j]{--jy-color:rgba(255,255,255,.92)}
 #gl-tog{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin:0 0 10px}
 #gl-tog button{font-family:var(--f-han);font-size:13px;font-weight:700;padding:3px 12px 4px;border-radius:20px;border:1.5px solid var(--border,#D9D6C4);background:var(--surface,#fff);color:var(--text-sub,#666B5C);cursor:pointer;line-height:1.5}
 #gl-tog button.on{background:var(--accent-bg,#E3EFE9);color:var(--accent,#0E6B57);border-color:#9CC9BA}
@@ -781,6 +781,8 @@ html.hide-th .thx{display:none!important}
     <button class="tab-btn" data-tab="time">⏰ <span class="tl">時間</span><span class="tj">si4 gaan3</span></button>
     <button class="tab-btn" data-tab="dir">🧭 <span class="tl">方向</span><span class="tj">fong1 hoeng3</span></button>
     <button class="tab-btn" data-tab="anto">↔ <span class="tl">相反詞</span><span class="tj">soeng1 faan2 ci4</span></button>
+    <button class="tab-btn" data-tab="shopping">🛒 <span class="tl">買餸</span><span class="tj">maai5 sung3</span></button>
+    <button class="tab-btn" data-tab="weather">🌦 <span class="tl">天氣</span><span class="tj">tin1 hei3</span></button>
     <button class="tab-btn" data-tab="dialogue">💬 <span class="tl">對話</span><span class="tj">deoi3 waa6</span></button>
     <button class="tab-btn" data-tab="lessons">📖 <span class="tl">課堂</span><span class="tj">fo3 tong4</span></button>
     <button class="tab-btn" data-tab="quiz">📝 <span class="tl">測驗</span><span class="tj">cak1 jim6</span></button>
@@ -899,7 +901,6 @@ html.hide-th .thx{display:none!important}
     <div class="filter-bar" id="ssFilterBar"></div>
     <div id="ssContent"></div>
     <div id="ssGame" style="display:none"></div>
-     <div id="ra-root" style="display:none"></div>
   </div>
 
   <!-- CLASSIFIER（量詞進階版 ＋ 舊量詞配對遊戲） -->
@@ -921,6 +922,17 @@ html.hide-th .thx{display:none!important}
   <div class="page" id="page-family">
     <div class="tm-bar" id="fm-bar"></div>
     <div id="fm-host"></div>
+  </div>
+
+  <!-- SHOPPING（落街買餸） -->
+  <div class="page" id="page-shopping">
+    <div class="tm-bar" id="fs-bar"></div>
+    <div id="fs-host"></div>
+  </div>
+  <!-- WEATHER（香港天氣） -->
+  <div class="page" id="page-weather">
+    <div class="tm-bar" id="wx-bar"></div>
+    <div id="wx-host"></div>
   </div>
 
   <!-- DIALOGUE -->
@@ -1014,7 +1026,7 @@ html.hide-th .thx{display:none!important}
 </div><!-- /content -->
 </div><!-- /app -->
 
-<script src="js/app.js?v=20261124"></script>
+<script src="js/app.js?v=20261127"></script>
 <script src="js/jyutping-practice.js?v=20261119"></script>
 <script src="js/vocab-read-aloud.js?v=20261119"></script>
 <script src="js/soundalike.js?v=20261119"></script>
@@ -1035,12 +1047,13 @@ html.hide-th .thx{display:none!important}
 <script src="js/antonym.js?v=20261119"></script>
 <script src="js/classifier.js?v=20261119"></script>
 <script src="js/hobby.js?v=20261119"></script>
+<script src="js/shopping.js?v=20261127"></script>
+<script src="js/weather.js?v=20261127"></script>
 <script src="js/tones.js?v=20261119"></script>
 <script src="js/score-bridge.js?v=20261119"></script>
-<script src="js/rearrange.js?v=20261124"></script>
 <script>window.BD_IMGS = {"outer": "img/body-outer.webp?v=20261119", "back": "img/body-back.webp?v=20261119", "skeleton": "img/body-skeleton.webp?v=20261119", "organs": "img/body-organs.webp?v=20261119"};</script>
 <script id="bd-module" src="js/body.js?v=20261119"></script>
 <script id="ft-module" src="js/family.js?v=20261119"></script>
-<script id="jy-engine" src="js/jy-engine.js?v=20261124"></script>
+<script id="jy-engine" src="js/jy-engine.js?v=20261119"></script>
 </body>
 </html>

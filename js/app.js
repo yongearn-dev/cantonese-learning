@@ -447,6 +447,10 @@ function showTab(tab) {
   if (tab === 'body' && window.bdShow) window.bdShow();
   if (S.tab === 'family' && tab !== 'family' && window.famLeave) window.famLeave();
   if (tab === 'family' && window.famShow) window.famShow();
+  if (S.tab === 'shopping' && tab !== 'shopping' && window.fsLeave) window.fsLeave();
+  if (tab === 'shopping' && window.fsShow) window.fsShow();
+  if (S.tab === 'weather' && tab !== 'weather' && window.wxLeave) window.wxLeave();
+  if (tab === 'weather' && window.wxShow) window.wxShow();
   if (tab === 'game' && (GS.tab === 'time' || GS.tab === 'direction' || GS.tab === 'classifier')) setGameTab(S.gameTab);   // 時間遊戲已搬去「時間」頁，遊戲頁回復自己嘅遊戲
   if (tab === 'quiz' && window.qzShow) window.qzShow();
   if (S.tab === 'soundalike' && tab !== 'soundalike' && window.saLeave) window.saLeave();
@@ -465,7 +469,7 @@ function showPage(id) {
 // ── HOME ──────────────────────────────────────────────────────
 function jyRuby(zh,jp){var q=(jp||'').trim().split(/\s+/).filter(Boolean),k=0,h='';Array.from(zh).forEach(function(c){if(/[\u3400-\u9fff]/.test(c)&&k<q.length)h+='<ruby class="jr">'+c+'<rt data-j="'+q[k++]+'"></rt></ruby>';else h+=c;});return h;}
 function buildHome() {
-  const modules=[{icon:'🔤',title:'粵拼',jp:'jyut6 ping3',sub:'聲母＋韻母＋聲調 卡牌練習',tab:'jyutping'},{icon:'🃏',title:'音近卡牌',jp:'jam1 gan6 kaat1 paai2',sub:'分清「好似噉」嘅廣東話：圖鑑、聽音辨詞、翻牌配對',tab:'soundalike'},{icon:'📚',title:'詞彙學習卡',jp:'ci4 wui6 hok6 zaap6 kaat1',sub:'翻卡練習基本詞彙',tab:'vocab'},{icon:'📐',title:'句子結構',jp:'geoi3 zi2 git3 kau3',sub:'睇清楚廣東話句式',tab:'sentence'},{icon:'🀄',title:'量詞',jp:'loeng6 ci4',sub:'個・隻・條・張・件・部…＋顏色大細・組合器・句子遊戲・量詞配對',tab:'classifier'},{icon:'🎈',title:'興趣',jp:'hing3 ceoi3',sub:'運動・音樂・藝術手工・煮嘢食・休閒・頻率尺・句式・遊戲',tab:'hobby'},{icon:'🫀',title:'身體',jp:'san1 tai2',sub:'部位・邊度痛・量詞・左右・功能・練習',tab:'body'},{icon:'👨‍👩‍👧‍👦',title:'家庭',jp:'gaa1 ting4',sub:'家譜・結婚生仔・稱呼遊戲・句子',tab:'family'},{icon:'⏰',title:'認識時間',jp:'jan6 sik1 si4 gaan3',sub:'點·鐘·時間分別・一日時段・點鐘・字同搭・近似講法・例句・時長・日期星期・婆婆日程・小測・時間遊戲',tab:'time'},{icon:'🧭',title:'方向',jp:'fong1 hoeng3',sub:'位置・東南西北・入面出面・嚟去・句型・練習・方向遊戲',tab:'dir'},{icon:'↔',title:'相反詞',jp:'soeng1 faan2 ci4',sub:'高矮肥瘦・快慢輕重…・程度詞・練習',tab:'anto'},{icon:'💬',title:'情景對話',jp:'cing4 ging2 deoi3 waa6',sub:'照顧・街市・緊急情況',tab:'dialogue'},{icon:'📖',title:'課堂材料',jp:'fo3 tong4 coi4 liu2',sub:'Chapter・Grammar・Extra',tab:'lessons'},{icon:'📝',title:'測驗',jp:'cak1 jim6',sub:'課堂測驗（一）第1–7課・（二）A／B卷 第8–14課・限時60分鐘',tab:'quiz'},{icon:'🎮',title:'互動遊戲',jp:'wu6 dung6 jau4 hei3',sub:'顏色遊戲（時間、方向、量詞遊戲喺各自分頁入面）',tab:'game'}];
+  const modules=[{icon:'🔤',title:'粵拼',jp:'jyut6 ping3',sub:'聲母＋韻母＋聲調 卡牌練習',tab:'jyutping'},{icon:'🃏',title:'音近卡牌',jp:'jam1 gan6 kaat1 paai2',sub:'分清「好似噉」嘅廣東話：圖鑑、聽音辨詞、翻牌配對',tab:'soundalike'},{icon:'📚',title:'詞彙學習卡',jp:'ci4 wui6 hok6 zaap6 kaat1',sub:'翻卡練習基本詞彙',tab:'vocab'},{icon:'📐',title:'句子結構',jp:'geoi3 zi2 git3 kau3',sub:'睇清楚廣東話句式',tab:'sentence'},{icon:'🀄',title:'量詞',jp:'loeng6 ci4',sub:'個・隻・條・張・件・部…＋顏色大細・組合器・句子遊戲・量詞配對',tab:'classifier'},{icon:'🎈',title:'興趣',jp:'hing3 ceoi3',sub:'運動・音樂・藝術手工・煮嘢食・休閒・頻率尺・句式・遊戲',tab:'hobby'},{icon:'🫀',title:'身體',jp:'san1 tai2',sub:'部位・邊度痛・量詞・左右・功能・練習',tab:'body'},{icon:'👨‍👩‍👧‍👦',title:'家庭',jp:'gaa1 ting4',sub:'家譜・結婚生仔・稱呼遊戲・句子',tab:'family'},{icon:'⏰',title:'認識時間',jp:'jan6 sik1 si4 gaan3',sub:'點·鐘·時間分別・一日時段・點鐘・字同搭・近似講法・例句・時長・日期星期・婆婆日程・小測・時間遊戲',tab:'time'},{icon:'🧭',title:'方向',jp:'fong1 hoeng3',sub:'位置・東南西北・入面出面・嚟去・句型・練習・方向遊戲',tab:'dir'},{icon:'↔',title:'相反詞',jp:'soeng1 faan2 ci4',sub:'高矮肥瘦・快慢輕重…・程度詞・練習',tab:'anto'},{icon:'🛒',title:'落街買餸',jp:'lok6 gaai1 maai5 sung3',sub:'街市菜檔・豬肉檔・魚檔・生果舖・雜貨舖・紙幣硬幣・家常菜・練習',tab:'shopping'},{icon:'🌦',title:'天氣',jp:'tin1 hei3',sub:'四季・警告信號（風球／暴雨）・詞彙・對話・練習',tab:'weather'},{icon:'💬',title:'情景對話',jp:'cing4 ging2 deoi3 waa6',sub:'照顧・街市・緊急情況',tab:'dialogue'},{icon:'📖',title:'課堂材料',jp:'fo3 tong4 coi4 liu2',sub:'Chapter・Grammar・Extra',tab:'lessons'},{icon:'📝',title:'測驗',jp:'cak1 jim6',sub:'課堂測驗（一）第1–7課・（二）A／B卷 第8–14課・限時60分鐘',tab:'quiz'},{icon:'🎮',title:'互動遊戲',jp:'wu6 dung6 jau4 hei3',sub:'顏色遊戲（時間、方向、量詞遊戲喺各自分頁入面）',tab:'game'}];
   $('navCards').innerHTML = modules.map(m=>'<div class="nav-card" onclick="showTab(\''+m.tab+'\')"><div class="nav-row"><span class="nav-icon">'+m.icon+'</span><span class="nav-title">'+jyRuby(m.title,m.jp)+'</span></div><div class="nav-sub">'+m.sub+'</div></div>').join('');
 }
 
@@ -658,7 +662,7 @@ function buildSentence(){
   const ids=[...new Set(learnSens.map(x=>x.pid))];
   if(!ids.includes(S.ssPatternId))S.ssPatternId=ids[0];
   const mode=$('ssMode');mode.innerHTML='';
-  [['learn','📖 學習'],['game','🎮 重組句子'],['challenge','⏱ 重組挑戰'],['rearrange','🧩 重組練習']].forEach(([m,label])=>{
+  [['learn','📖 學習'],['game','🎮 重組句子'],['challenge','⏱ 重組挑戰']].forEach(([m,label])=>{
     const b=h('button','seg-btn'+(SG.mode===m?' act':''),label);
     b.addEventListener('click',()=>{if(SG.mode===m)return;chStop();CH.view='menu';SG.mode=m;if(m==='game')startSsGame();buildSentence();});
     mode.appendChild(b);
@@ -666,10 +670,7 @@ function buildSentence(){
   const learn=SG.mode==='learn';
   $('ssFilterBar').style.display=learn?'':'none';
   $('ssContent').style.display=learn?'':'none';
-  const raEl=$('ra-root'),isRa=SG.mode==='rearrange';
-  if(raEl)raEl.style.display=isRa?'':'none';
-  $('ssGame').style.display=(learn||isRa)?'none':'';
-  if(isRa){if(window.RA&&raEl)RA.mount(raEl);return;}
+  $('ssGame').style.display=learn?'none':'';
   if(!learn){
     if(SG.mode==='challenge'){renderChallenge();return;}
     if(!SG.queue.length)startSsGame();
@@ -1103,7 +1104,7 @@ function recordScore(){
   renderHistory();
 }
 function renderHistory(){
-  const names={color:'🎨 顏色',time:'⏰ 時間遊戲',tq:'⏰ 時間小測',direction:'🧭 方向遊戲',classifier:'🀄 量詞配對',cd:'🀄 量詞句子遊戲',hb:'🎈 興趣遊戲',bd:'🫀 身體練習',ft:'👨‍👩‍👧‍👦 家庭遊戲',vocab:'🎲 詞彙大雜燴'};
+  const names={color:'🎨 顏色',time:'⏰ 時間遊戲',tq:'⏰ 時間小測',direction:'🧭 方向遊戲',classifier:'🀄 量詞配對',cd:'🀄 量詞句子遊戲',hb:'🎈 興趣遊戲',bd:'🫀 身體練習',ft:'👨‍👩‍👧‍👦 家庭遊戲',food:'🛒 買餸練習',wx:'🌦 天氣練習',vocab:'🎲 詞彙大雜燴'};
   const recent=S.scoreHistory.slice(-6).reverse();
   if(!recent.length){$('scoreHistory').innerHTML='';return;}
   $('scoreHistory').innerHTML='<div class="sec" style="margin-top:16px">📊 得分紀錄</div>'+recent.map(h=>'<div class="hist-item"><span>'+names[h.game]+'</span><span style="font-family:\'Space Mono\';color:var(--yellow);font-weight:700">'+h.score+'分</span><span style="color:var(--text-muted);font-size:11px">'+h.time+'</span></div>').join('');
